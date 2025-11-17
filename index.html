@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Co-Cal (기초 뼈대)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 캘린더 날짜 셀의 최소 높이 지정 (모양만 잡기 위함) */
+        .calendar-day-placeholder {
+            min-height: 100px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div id="app" class="min-h-screen">
+
+        <div id="login-page" class="flex items-center justify-center min-h-screen">
+            <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-lg">
+                <h2 class="text-3xl font-bold text-center text-gray-900">Co-Cal 로그인</h2>
+                
+                <form id="login-form" class="space-y-6">
+                    <div>
+                        <label for="login-email" class="block text-sm font-medium text-gray-700">이메일</label>
+                        <input id="login-email" name="email" type="email" required
+                               class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    
+                    <div>
+                        <label for="login-password" class="block text-sm font-medium text-gray-700">비밀번호</label>
+                        <input id="login-password" name="password" type="password" required
+                               class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    
+                    <button type="submit"
+                            class="w-full px-4 py-2 font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        로그인
+                    </button>
+                </form>
+
+                <p class="text-sm text-center text-gray-600">
+                    계정이 없으신가요?
+                    <button id="show-signup" class="font-medium text-indigo-600 hover:text-indigo-500">
+                        회원가입하기
+                    </button>
+                </p>
+            </div>
+        </div>
+
+        <div id="signup-page" class="hidden flex items-center justify-center min-h-screen">
+            <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-lg">
+                <h2 class="text-3xl font-bold text-center text-gray-900">Co-Cal 회원가입</h2>
+                
+                <form id="signup-form" class="space-y-6">
+                    <div>
+                        <label for="signup-name" class="block text-sm font-medium text-gray-700">이름</label>
+                        <input id="signup-name" name="name" type="text" required
+                               class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label for="signup-email" class="block text-sm font-medium text-gray-700">이메일</label>
+                        <input id="signup-email" name="email" type="email" required
+                               class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label for="signup-password" class="block text-sm font-medium text-gray-700">비밀번호</label>
+                        <input id="signup-password" name="password" type="password" required
+                               class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    
+                    <button type="submit"
+                            class="w-full px-4 py-2 font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        회원가입
+                    </button>
+                </form>
+
+                <p class="text-sm text-center text-gray-600">
+                    이미 계정이 있으신가요?
+                    <button id="show-login" class="font-medium text-indigo-600 hover:text-indigo-500">
+                        로그인하기
+                    </button>
+                </p>
+            </div>
+        </div>
+
+        <div id="main-page" class="hidden">
+            <header class="bg-white shadow-md">
+                <div class="container flex items-center justify-between p-4 mx-auto max-w-7xl">
+                    <h1 class="text-2xl font-bold text-indigo-600">Co-Cal</h1>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm font-medium text-gray-700">로그인됨 (임시)</span>
+                        <button id="logout-button" class="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600">
+                            로그아웃
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main class="container p-4 mx-auto mt-6 max-w-7xl">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-4">
+
+                    <aside class="lg:col-span-1">
+                        <div class="p-4 bg-white rounded-lg shadow-lg">
+                            <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">스터디 그룹</h3>
+                            <ul class="mt-4 space-y-3">
+                                <li class="font-medium text-indigo-600">3조 웹응용프로그래밍</li>
+                                </ul>
+                        </div>
+                    </aside>
+
+                    <section class="lg:col-span-2">
+                        <div class="p-4 bg-white rounded-lg shadow-lg">
+                            <div class="flex items-center justify-between mb-4">
+                                <button class="px-3 py-1 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">&lt; 이전</button>
+                                <h2 class="text-xl font-bold">2025년 11월 (예시)</h2>
+                                <button class="px-3 py-1 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">다음 &gt;</button>
+                            </div>
+                            <div class="grid grid-cols-7 gap-1 text-center font-semibold">
+                                <div class="py-2 text-red-500">일</div>
+                                <div class="py-2">월</div>
+                                <div class="py-2">화</div>
+                                <div class="py-2">수</div>
+                                <div class="py-2">목</div>
+                                <div class="py-2">금</div>
+                                <div class="py-2 text-blue-500">토</div>
+                            </div>
+                            <div class="grid grid-cols-7 gap-1 mt-1">
+                                <div class="calendar-day-placeholder p-2 text-gray-400 bg-gray-50 rounded-md">30</div>
+                                <div class="calendar-day-placeholder p-2 text-gray-400 bg-gray-50 rounded-md">31</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">1</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">2</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">3</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">4</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">5</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">6</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">7</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">8</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">9</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">10</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">11</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">12</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">13</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">14</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">15</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">16</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">17</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">18</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">19</div>
+                                <div class="calendar-day-placeholder p-2 border border-gray-200 rounded-md bg-white">20</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <aside class="lg:col-span-1">
+                        <div class="p-4 bg-white rounded-lg shadow-lg">
+                            <h3 class="text-lg font-semibold text-gray-900">학습 기록</h3>
+                            <div class="mt-4">
+                                <label for="log-date" class="block text-sm font-medium text-gray-700">선택한 날짜</label>
+                                <input type="text" id="log-date" readonly
+                                       class="w-full px-3 py-2 mt-1 bg-gray-100 border border-gray-300 rounded-md"
+                                       placeholder="캘린더에서 날짜 선택">
+                                
+                                <label for="log-content" class="block mt-4 text-sm font-medium text-gray-700">학습 내용</label>
+                                <textarea id="log-content" rows="8"
+                                          class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                          placeholder="오늘 공부한 내용을 기록하세요..."></textarea>
+                                
+                                <button id="save-log" class="w-full px-4 py-2 mt-4 font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700">
+                                    기록 저장 (임시)
+                                </button>
+                            </div>
+                        </div>
+                    </aside>
+
+                </div>
+            </main>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- 페이지 DOM 요소 ---
+            const loginPage = document.getElementById('login-page');
+            const signupPage = document.getElementById('signup-page');
+            const mainPage = document.getElementById('main-page');
+
+            // --- 버튼 DOM 요소 ---
+            const showSignupBtn = document.getElementById('show-signup');
+            const showLoginBtn = document.getElementById('show-login');
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+            const logoutBtn = document.getElementById('logout-button');
+
+            // --- 페이지 이동 로직 ---
+
+            // '회원가입하기' 버튼 클릭 시
+            showSignupBtn.addEventListener('click', () => {
+                loginPage.classList.add('hidden');
+                signupPage.classList.remove('hidden');
+            });
+
+            // '로그인하기' 버튼 클릭 시
+            showLoginBtn.addEventListener('click', () => {
+                signupPage.classList.add('hidden');
+                loginPage.classList.remove('hidden');
+            });
+
+            // '로그인' 폼 제출 시 (지금은 기능 없이 페이지만 이동)
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault(); // 폼 제출 기본 동작(새로고침) 방지
+                
+                // TODO: 나중에 여기에 실제 로그인 로직 추가
+                
+                loginPage.classList.add('hidden');
+                mainPage.classList.remove('hidden');
+            });
+
+            // '회원가입' 폼 제출 시 (지금은 기능 없이 로그인 페이지로 이동)
+            signupForm.addEventListener('submit', (e) => {
+                e.preventDefault(); // 폼 제출 기본 동작(새로고침) 방지
+
+                // TODO: 나중에 여기에 실제 회원가입 로직 추가
+                
+                alert('회원가입 성공 (임시) - 로그인 페이지로 이동합니다.');
+                signupPage.classList.add('hidden');
+                loginPage.classList.remove('hidden');
+            });
+
+            // '로그아웃' 버튼 클릭 시
+            logoutBtn.addEventListener('click', () => {
+                mainPage.classList.add('hidden');
+                loginPage.classList.remove('hidden');
+            });
+
+            // --- 메인 페이지 기능 (나중에 추가) ---
+            
+            // TODO: 캘린더 생성 JS 로직 추가
+            
+            // TODO: '기록 저장' 버튼에 CRUD 로직 추가
+            
+            // TODO: '스터디 그룹' 기능 로직 추가
+            
+        });
+    </script>
+</body>
+</html>
