@@ -1,5 +1,5 @@
 ---
-name: Feature Issues Template
+name: Feature
 about: template for feature issues
 title: "[FEAT] "
 labels: feat
