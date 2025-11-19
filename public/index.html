@@ -105,7 +105,7 @@
                             <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">스터디 그룹</h3>
                             <ul class="mt-4 space-y-3">
                                 <li class="font-medium text-indigo-600">3조 웹응용프로그래밍</li>
-                                </ul>
+                            </ul>
                         </div>
                     </aside>
 
@@ -143,7 +143,7 @@
                                 <div id="schedule-list-container" class="hidden mb-4">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">저장된 기록 (클릭하여 수정)</label>
                                     <ul id="schedule-list" class="space-y-2 max-h-40 overflow-y-auto border p-2 rounded bg-gray-50">
-                                        </ul>
+                                    </ul>
                                     <button id="btn-new-entry" class="hidden w-full mt-2 text-xs text-indigo-600 hover:text-indigo-800 underline text-right">
                                         + 새 기록 작성하기 (수정 취소)
                                     </button>
@@ -336,7 +336,7 @@
                     emptyDiv.className = 'p-2 bg-gray-50 rounded-md'; // 스타일 유지
                     calendarGrid.appendChild(emptyDiv);
                 }
-
+            
                 // 2. 날짜 채우기 (1일부터 말일까지)
                 for (let i = 1; i <= lastDay; i++) {
                     const dateDiv = document.createElement('div');
@@ -364,13 +364,47 @@
                         renderScheduleList(dateString);
                     });
 
-                            calendarGrid.appendChild(dateDiv);
-                        }
+                    calendarGrid.appendChild(dateDiv);
+                } // 날짜 반복문 종료
 
-                        if (currentUser) {
-                            await loadSchedules(); 
-                        }
-                    };
+                // 공휴일 호출
+                loadHolidays(year);
+
+                if (currentUser) {
+                    await loadSchedules(); 
+                }
+            };
+
+            // [공휴일 로드 함수]
+            const loadHolidays = async (year) => {
+                try {
+                    const response = await fetch(`/api/holidays?year=${year}&country=KR`);
+                    if (response.ok) {
+                        const holidays = await response.json();
+                        holidays.forEach(holiday => {
+                            // 날짜가 일치하는 칸 찾기
+                            const dateDiv = document.querySelector(`div[data-date="${holiday.date}"]`);
+                            if (dateDiv) {
+                                // 1. 날짜 숫자 색상 변경 (빨강)
+                                const daySpan = dateDiv.querySelector('span');
+                                if(daySpan) {
+                                    daySpan.classList.remove('text-gray-700');
+                                    daySpan.classList.add('text-red-500');
+                                }
+                                // 2. 공휴일 이름 표시
+                                if(!dateDiv.querySelector('.holiday-name')) {
+                                    const holidayNameDiv = document.createElement('div');
+                                    holidayNameDiv.className = 'holiday-name text-xs text-red-500 mt-1 truncate font-bold';
+                                    holidayNameDiv.innerText = holiday.name;
+                                    dateDiv.insertBefore(holidayNameDiv, dateDiv.lastElementChild);
+                                }
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error('공휴일 로드 실패:', error);
+                }
+            };
 
             // [리스트 그리기 헬퍼 함수]
             const renderScheduleList = (dateString) => {
