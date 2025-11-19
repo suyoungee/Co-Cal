@@ -1,4 +1,5 @@
 // server.js
+const db = require('./config/database'); //서버가 켜질 때 DB 연결 시도
 const express = require('express');
 const app = express();
 const path = require('path');
