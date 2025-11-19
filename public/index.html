@@ -186,25 +186,76 @@
                 loginPage.classList.remove('hidden');
             });
 
-            // '로그인' 폼 제출 시 (지금은 기능 없이 페이지만 이동)
-            loginForm.addEventListener('submit', (e) => {
-                e.preventDefault(); // 폼 제출 기본 동작(새로고침) 방지
+            // '로그인' 폼 제출 시 로직 (서버 통신 추가)
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault(); 
                 
-                // TODO: 나중에 여기에 실제 로그인 로직 추가
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
                 
-                loginPage.classList.add('hidden');
-                mainPage.classList.remove('hidden');
+                try {
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password }),
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        // 로그인 성공 처리
+                        alert('환영합니다, ' + data.user.name + '님!');
+                        
+                        // 헤더에 사용자 이름 표시 (UI 업데이트)
+                        const headerUserInfo = document.querySelector('header span');
+                        if(headerUserInfo) headerUserInfo.innerText = `${data.user.name}님 로그인됨`;
+
+                        // 페이지 전환
+                        loginPage.classList.add('hidden');
+                        mainPage.classList.remove('hidden');
+                        
+                        // (선택사항) 로그인 정보 유지용 - 나중에 구현
+                        // localStorage.setItem('user', JSON.stringify(data.user)); 
+                    } else {
+                        // 로그인 실패 처리
+                        alert('실패: ' + data.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('서버 통신 중 오류가 발생했습니다.');
+                }
             });
 
-            // '회원가입' 폼 제출 시 (지금은 기능 없이 로그인 페이지로 이동)
-            signupForm.addEventListener('submit', (e) => {
-                e.preventDefault(); // 폼 제출 기본 동작(새로고침) 방지
+            // '회원가입' 폼 제출 시 로직 (서버 통신 추가)
+            signupForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
 
-                // TODO: 나중에 여기에 실제 회원가입 로직 추가
-                
-                alert('회원가입 성공 (임시) - 로그인 페이지로 이동합니다.');
-                signupPage.classList.add('hidden');
-                loginPage.classList.remove('hidden');
+                const name = document.getElementById('signup-name').value;
+                const email = document.getElementById('signup-email').value;
+                const password = document.getElementById('signup-password').value;
+
+                try {
+                    const response = await fetch('/api/auth/signup', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ name, email, password }),
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        alert('성공: ' + data.message); // 성공 메시지
+                        signupPage.classList.add('hidden');
+                        loginPage.classList.remove('hidden');
+                    } else {
+                        alert('실패: ' + data.message); // 실패 메시지 (중복 등)
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('서버 통신 중 오류가 발생했습니다.');
+                }
             });
 
             // '로그아웃' 버튼 클릭 시
