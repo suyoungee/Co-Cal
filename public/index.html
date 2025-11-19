@@ -260,8 +260,23 @@
 
             // '로그아웃' 버튼 클릭 시
             logoutBtn.addEventListener('click', () => {
+                // 1. 사용자 의사 확인
+                if (!confirm('정말 로그아웃 하시겠습니까?')) {
+                    return; 
+                }
+
+                // 2. 화면 전환 (메인 -> 로그인)
                 mainPage.classList.add('hidden');
                 loginPage.classList.remove('hidden');
+
+                // 3. 입력 필드 초기화 (보안 및 UX: 다음 사람을 위해 비워둠)
+                document.getElementById('login-email').value = '';
+                document.getElementById('login-password').value = '';
+
+                // 4. (선택사항) 로그인 정보 삭제 (나중에 토큰 등을 쓴다면 여기서 삭제)
+                // localStorage.removeItem('user'); 
+
+                alert('로그아웃 되었습니다.');
             });
 
             // --- 메인 페이지 기능 (나중에 추가) ---
