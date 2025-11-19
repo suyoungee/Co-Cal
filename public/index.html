@@ -131,22 +131,37 @@
                     </section>
 
                     <aside class="lg:col-span-1">
-                        <div class="p-4 bg-white rounded-lg shadow-lg">
+                        <div class="p-4 bg-white rounded-lg shadow-lg h-full flex flex-col">
                             <h3 class="text-lg font-semibold text-gray-900">학습 기록</h3>
-                            <div class="mt-4">
+                            
+                            <div class="mt-4 flex-1 flex flex-col">
                                 <label for="log-date" class="block text-sm font-medium text-gray-700">선택한 날짜</label>
                                 <input type="text" id="log-date" readonly
-                                       class="w-full px-3 py-2 mt-1 bg-gray-100 border border-gray-300 rounded-md"
-                                       placeholder="캘린더에서 날짜 선택">
+                                    class="w-full px-3 py-2 mt-1 bg-gray-100 border border-gray-300 rounded-md mb-4"
+                                    placeholder="캘린더에서 날짜 선택">
                                 
-                                <label for="log-content" class="block mt-4 text-sm font-medium text-gray-700">학습 내용</label>
-                                <textarea id="log-content" rows="8"
-                                          class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                          placeholder="오늘 공부한 내용을 기록하세요..."></textarea>
+                                <div id="schedule-list-container" class="hidden mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">저장된 기록 (클릭하여 수정)</label>
+                                    <ul id="schedule-list" class="space-y-2 max-h-40 overflow-y-auto border p-2 rounded bg-gray-50">
+                                        </ul>
+                                    <button id="btn-new-entry" class="hidden w-full mt-2 text-xs text-indigo-600 hover:text-indigo-800 underline text-right">
+                                        + 새 기록 작성하기 (수정 취소)
+                                    </button>
+                                </div>
+
+                                <label for="log-content" class="block text-sm font-medium text-gray-700">내용 작성</label>
+                                <textarea id="log-content" rows="5"
+                                        class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        placeholder="오늘 공부한 내용을 기록하세요..."></textarea>
                                 
-                                <button id="save-log" class="w-full px-4 py-2 mt-4 font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700">
-                                    기록 저장 (임시)
-                                </button>
+                                <div class="flex gap-2 mt-4">
+                                    <button id="save-log" class="flex-1 px-4 py-2 font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700">
+                                        기록 저장
+                                    </button>
+                                    <button id="delete-log" class="hidden flex-1 px-4 py-2 font-medium text-white bg-red-500 rounded-md shadow-sm hover:bg-red-600">
+                                        삭제
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </aside>
@@ -159,6 +174,10 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+
+            let currentUser = null; // 로그인한 유저 정보를 담을 변수
+            let selectedScheduleId = null; // 현재 선택된 일정의 ID (수정/삭제용)
+            let dailySchedules = {};       // 날짜별 일정 데이터 저장소 {"2025-11-19": {id: 5, content: "..."}}
             
             // --- 페이지 DOM 요소 ---
             const loginPage = document.getElementById('login-page');
@@ -205,6 +224,11 @@
                     if (response.ok) {
                         // 로그인 성공 처리
                         alert('환영합니다, ' + data.user.name + '님!');
+
+                        // 로그인한 유저 정보 저장
+                        currentUser = data.user;
+
+                        renderCalendar();
                         
                         // 헤더에 사용자 이름 표시 (UI 업데이트)
                         const headerUserInfo = document.querySelector('header span');
@@ -273,6 +297,8 @@
                 document.getElementById('login-email').value = '';
                 document.getElementById('login-password').value = '';
 
+                currentUser = null;
+
                 // 4. (선택사항) 로그인 정보 삭제 (나중에 토큰 등을 쓴다면 여기서 삭제)
                 // localStorage.removeItem('user'); 
 
@@ -290,9 +316,8 @@
             const nextBtn = document.getElementById('next-month');
 
             // 달력 그리기 함수
-            const renderCalendar = () => {
+            const renderCalendar = async () => {
                 calendarGrid.innerHTML = ''; // 기존 내용 초기화
-
                 const year = currentDate.getFullYear();
                 const month = currentDate.getMonth(); // 0(1월) ~ 11(12월)
 
@@ -301,7 +326,7 @@
 
                 // 이번 달 1일이 무슨 요일인지 (0:일, 1:월 ... 6:토)
                 const firstDayIndex = new Date(year, month, 1).getDay();
-                
+                                
                 // 이번 달 마지막 날짜가 며칠인지 (28, 30, 31?)
                 const lastDay = new Date(year, month + 1, 0).getDate();
 
@@ -315,16 +340,121 @@
                 // 2. 날짜 채우기 (1일부터 말일까지)
                 for (let i = 1; i <= lastDay; i++) {
                     const dateDiv = document.createElement('div');
-                    dateDiv.className = 'p-2 border border-gray-200 rounded-md bg-white hover:bg-indigo-50 cursor-pointer h-24 transition';
-                    dateDiv.innerHTML = `<span class="font-semibold text-gray-700">${i}</span>`;
                     
+                    // "2025-11-05" 형태로 만듦 (월/일이 한 자리수면 앞에 0 붙이기)
+                    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                    dateDiv.dataset.date = dateString;
+
+                    dateDiv.className = 'p-2 border border-gray-200 rounded-md bg-white hover:bg-indigo-50 cursor-pointer h-24 transition flex flex-col justify-between';
+                    
+                    // 날짜 숫자와 점이 들어갈 공간 분리
+                    dateDiv.innerHTML = `
+                        <span class="font-semibold text-gray-700">${i}</span>
+                        <div id="dots-${dateString}" class="flex gap-1 justify-center text-xs text-red-500"></div> 
+                    `;
+
                     // 날짜 클릭 이벤트 (학습 기록용)
                     dateDiv.addEventListener('click', () => {
-                        // 선택된 날짜 표시 로직 (나중에 구현)
-                        document.getElementById('log-date').value = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                        document.getElementById('log-date').value = dateString;
+                        
+                        // 1. 일단 입력폼은 초기화 (새 글 쓸 준비)
+                        resetFormToCreateMode();
+
+                        // 2. 리스트가 있으면 보여주기
+                        renderScheduleList(dateString);
                     });
 
-                    calendarGrid.appendChild(dateDiv);
+                            calendarGrid.appendChild(dateDiv);
+                        }
+
+                        if (currentUser) {
+                            await loadSchedules(); 
+                        }
+                    };
+
+            // [리스트 그리기 헬퍼 함수]
+            const renderScheduleList = (dateString) => {
+                const listContainer = document.getElementById('schedule-list-container');
+                const listElement = document.getElementById('schedule-list');
+                const items = dailySchedules[dateString] || [];
+
+                // 데이터가 없으면 리스트 숨김
+                if (items.length === 0) {
+                    listContainer.classList.add('hidden');
+                    return;
+                }
+
+                // 데이터가 있으면 리스트 표시 및 생성
+                listContainer.classList.remove('hidden');
+                listElement.innerHTML = ''; // 기존 목록 비우기
+
+                items.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'p-2 bg-white border border-gray-200 rounded hover:bg-indigo-50 cursor-pointer text-sm truncate';
+                    li.innerText = item.content; // 내용 일부 보여주기
+                    
+                    // 리스트 아이템 클릭 시 -> 수정 모드로 진입
+                    li.addEventListener('click', () => {
+                        document.getElementById('log-content').value = item.content;
+                        selectedScheduleId = item.id;
+                        
+                        document.getElementById('save-log').innerText = '수정';
+                        document.getElementById('delete-log').classList.remove('hidden');
+                        document.getElementById('btn-new-entry').classList.remove('hidden'); // '새 글 쓰기' 버튼 보이기
+                    });
+
+                    listElement.appendChild(li);
+                });
+            };
+
+            document.getElementById('btn-new-entry').addEventListener('click', () => {
+                resetFormToCreateMode();
+            });
+
+            // 입력폼 초기화 헬퍼 함수 (새 글 작성 모드로 복귀)
+            const resetFormToCreateMode = () => {
+                document.getElementById('log-content').value = '';
+                selectedScheduleId = null;
+                document.getElementById('save-log').innerText = '기록 저장';
+                document.getElementById('delete-log').classList.add('hidden');
+                document.getElementById('btn-new-entry').classList.add('hidden');
+            };
+
+            // 2. 일정 불러오기 함수
+            const loadSchedules = async () => {
+                if (!currentUser) return;
+                // 초기화
+                dailySchedules = {}; 
+                // 기존 점들 지우기
+                document.querySelectorAll('[id^="dots-"]').forEach(el => el.innerHTML = '');
+
+                try {
+                    const response = await fetch(`/api/schedules?user_id=${currentUser.id}`);
+                    const schedules = await response.json();
+
+                    schedules.forEach(schedule => {
+                        // 배열로 저장 (없으면 생성 후 push)
+                        if (!dailySchedules[schedule.date]) {
+                            dailySchedules[schedule.date] = [];
+                        }
+                        dailySchedules[schedule.date].push(schedule);
+
+                        // 2. 달력에 점 찍기
+                        const dotContainer = document.getElementById(`dots-${schedule.date}`);
+                        if (dotContainer) {
+                            const dot = document.createElement('div');
+                            dot.className = 'w-2 h-2 bg-red-500 rounded-full';
+                            dotContainer.appendChild(dot);
+                        }
+                    });
+                    // 만약 현재 보고 있는 날짜가 있다면 리스트도 갱신해줘야 함 (저장 직후를 위해)
+                    const currentDateVal = document.getElementById('log-date').value;
+                    if(currentDateVal && dailySchedules[currentDateVal]) {
+                        renderScheduleList(currentDateVal);
+                    }
+
+                } catch (error) {
+                    console.error('일정 로드 실패:', error);
                 }
             };
 
@@ -343,7 +473,78 @@
             });
             
             
-            // TODO: '기록 저장' 버튼에 CRUD 로직 추가
+            // 일정 저장 로직
+            const saveLogBtn = document.getElementById('save-log');
+
+            // '기록 저장(또는 수정)' 버튼 클릭 시
+            saveLogBtn.addEventListener('click', async () => {
+                if (!currentUser) return alert('로그인이 필요합니다.');
+                
+                const date = document.getElementById('log-date').value;
+                const content = document.getElementById('log-content').value;
+                if (!date || !content.trim()) return alert('날짜와 내용을 입력하세요.');
+
+                // 수정(PUT)인지 저장(POST)인지 결정
+                const method = selectedScheduleId ? 'PUT' : 'POST';
+                const url = selectedScheduleId 
+                    ? `/api/schedules/${selectedScheduleId}` 
+                    : '/api/schedules';
+
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: currentUser.id,
+                            date: date,
+                            content: content
+                        }),
+                    });
+
+                    if (response.ok) {
+                        alert(selectedScheduleId ? '수정되었습니다!' : '저장되었습니다!');
+                        document.getElementById('log-content').value = '';
+                        document.getElementById('delete-log').classList.add('hidden'); // 버튼 초기화
+                        saveLogBtn.innerText = '기록 저장';
+                        selectedScheduleId = null;
+                        
+                        loadSchedules(); // 화면 갱신
+                    } else {
+                        const data = await response.json();
+                        alert('실패: ' + data.message);
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+            });
+
+            // '삭제' 버튼 클릭 시
+            document.getElementById('delete-log').addEventListener('click', async () => {
+                if (!selectedScheduleId || !confirm('정말 삭제하시겠습니까?')) return;
+
+                try {
+                    const response = await fetch(`/api/schedules/${selectedScheduleId}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: currentUser.id }) // 본인 확인용
+                    });
+
+                    if (response.ok) {
+                        alert('삭제되었습니다.');
+                        // 화면 초기화
+                        document.getElementById('log-content').value = '';
+                        document.getElementById('delete-log').classList.add('hidden');
+                        document.getElementById('save-log').innerText = '기록 저장';
+                        selectedScheduleId = null;
+
+                        loadSchedules(); // 빨간 점 지우기 위해 새로고침
+                    } else {
+                        alert('삭제 실패');
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+            });
             
             // TODO: '스터디 그룹' 기능 로직 추가
             
