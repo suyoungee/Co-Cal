@@ -3,9 +3,14 @@ const express = require('express');
 const app = express();
 const path = require('path');
 const db = require('./config/database'); //서버가 켜질 때 DB 연결 시도
+const initDB = require('./config/init-db');
+initDB(); // DB 연결 후 바로 실행
 const authRoutes = require('./routes/auth');
 const scheduleRoutes = require('./routes/schedule');
 const holidayRoutes = require('./routes/holiday');
+const groupRoutes = require('./routes/groups');
+
+
 
 // 설정: 서버 포트 번호 (3000번)
 const PORT = 3000;
@@ -21,6 +26,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/holidays', holidayRoutes);
+app.use('/api/groups', groupRoutes);
 
 // 기본 경로('/')로 접속했을 때 index.html 보내주기
 app.get('/', (req, res) => {
