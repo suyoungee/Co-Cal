@@ -52,6 +52,8 @@ CREATE TABLE schedules (
 ```
 3. [추가] timetable DB 세팅
 ```
+USE cocal_db;
+
 CREATE TABLE study_timetable (
     id INT AUTO_INCREMENT PRIMARY KEY,
     group_id INT NOT NULL,
