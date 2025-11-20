@@ -107,6 +107,26 @@
                                 <li class="font-medium text-indigo-600">3조 웹응용프로그래밍</li>
                             </ul>
                         </div>
+
+                        <!-- [일정 조율] 타임테이블 -->
+                        <div class="p-4 bg-white rounded-lg shadow-lg mt-6 pl-2">
+                            <h3 class="text-lg font-semibold text-gray-900 border-b pb-2 pl-2">일정 조율</h3>
+                            <div class="flex gap-2 mt-2 text-xs">
+                                <button id="btn-my-timetable"
+                                        class="px-2 py-1 border rounded bg-indigo-600 text-white">
+                                    내 시간표 편집
+                                </button>
+                                <button id="btn-group-timetable"
+                                        class="px-2 py-1 border rounded bg-gray-100">
+                                    그룹 시간표 보기
+                                </button>
+                            </div>
+
+                            <div id="timetable" class="overflow-x-auto mt-4 ml-0 pl-0 pr-0">
+                                <!-- JS로 자동 생성됨 -->
+                            </div>
+                        </div>
+
                     </aside>
 
                     <section class="lg:col-span-2">
@@ -173,9 +193,11 @@
     </div>
 
     <script>
+        // [수정] 전역 변수로 옮김
+        let currentUser = null; // 로그인한 유저 정보를 담을 변수
+
         document.addEventListener('DOMContentLoaded', () => {
 
-            let currentUser = null; // 로그인한 유저 정보를 담을 변수
             let selectedScheduleId = null; // 현재 선택된 일정의 ID (수정/삭제용)
             let dailySchedules = {};       // 날짜별 일정 데이터 저장소 {"2025-11-19": {id: 5, content: "..."}}
             
@@ -229,6 +251,10 @@
                         currentUser = data.user;
 
                         renderCalendar();
+
+                        // [일정 조율] timetable 불러오기
+                        renderTimetableUI();
+                        loadMyTimetable();
                         
                         // 헤더에 사용자 이름 표시 (UI 업데이트)
                         const headerUserInfo = document.querySelector('header span');
@@ -581,8 +607,225 @@
             });
             
             // TODO: '스터디 그룹' 기능 로직 추가
+
+            // [일정 조율] 버튼 이벤트
+            const btnMy = document.getElementById('btn-my-timetable');
+            const btnGroup = document.getElementById('btn-group-timetable');
+
+            btnMy.addEventListener('click', () => {
+                timetableMode = 'my';
+                loadMyTimetable();
+            });
+
+            btnGroup.addEventListener('click', () => {
+                timetableMode = 'group';
+                loadGroupTimetable();
+            });
             
         });
+
+        // [일정 조율] 요일/시간 블록 정의
+        const DAYS = [
+            { label: '일', value: 0 },
+            { label: '월', value: 1 },
+            { label: '화', value: 2 },
+            { label: '수', value: 3 },
+            { label: '목', value: 4 },
+            { label: '금', value: 5 },
+            { label: '토', value: 6 },
+        ];
+
+        const BLOCKS = Array.from({ length: 14 }, (_, i) => {
+            const hour = 10 + i;  // 10~23
+            return {
+                label: `${hour.toString().padStart(2, '0')}:00`,
+                value: i + 1
+            };
+        });
+
+        // TODO: 그룹 기능 추가되면 변경
+        let currentGroupId = 1; // 임시 값
+        let timetableMode = 'my'; // 'my' or 'group'
+
+        let isDragging = false;
+        let dragMode = "paint"; // "paint" or "erase"
+
+        // 마우스 떼면 드래그 종료
+        document.addEventListener("mouseup", () => {
+            isDragging = false;
+        });
+
+        function renderTimetableUI() {
+            const container = document.getElementById('timetable');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const table = document.createElement('table');
+            table.className = 'min-w-full border-collapse select-none';
+
+            const thead = document.createElement('thead');
+            const row = document.createElement('tr');
+
+            const blank = document.createElement('th');
+            blank.className = 'p-2';
+            row.appendChild(blank);
+
+            DAYS.forEach(d => {
+                const th = document.createElement('th');
+                th.textContent = d.label;
+                th.className = 'p-2 text-center font-medium text-gray-700';
+                row.appendChild(th);
+            });
+
+            thead.appendChild(row);
+            table.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+
+            BLOCKS.forEach(block => {
+                const tr = document.createElement('tr');
+
+                const timeTd = document.createElement('td');
+                timeTd.textContent = block.label;
+                timeTd.className = 'text-gray-600 text-sm w-10 text-right pr-1 select-none';
+                tr.appendChild(timeTd);
+
+                DAYS.forEach(day => {
+                    const td = document.createElement('td');
+                    td.className = 'border h-10 cursor-pointer bg-white hover:bg-blue-50 transition';
+                    td.dataset.day = day.value;
+                    td.dataset.block = block.value;
+
+                    // 클릭 & 드래그 시작
+                    td.addEventListener('mousedown', async (e) => {
+                        if (e.button !== 0) return;
+                        if (!currentUser) return alert("로그인 후 이용하세요.");
+                        if (!currentGroupId) return alert("그룹을 먼저 선택하세요.");
+
+                        isDragging = true;
+
+                        const alreadyOn = td.classList.contains('bg-blue-100');
+                        dragMode = alreadyOn ? 'erase' : 'paint';
+
+                        if (dragMode === 'paint') {
+                            td.classList.add('bg-blue-100');
+                        } else {
+                            td.classList.remove('bg-blue-100');
+                        }
+
+                        await fetch('/api/timetable', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                group_id: currentGroupId,
+                                user_id: currentUser.id,
+                                day_of_week: day.value,
+                                block: block.value,
+                                isOn: dragMode === "paint"
+                            })
+                        });
+
+                        e.preventDefault();
+                    });
+
+                    // 드래그 중
+                    td.addEventListener('mouseenter', async () => {
+                        if (!isDragging) return;
+                        if (!currentUser) return;
+                        if (!currentGroupId) return;
+
+                        if (dragMode === 'paint') {
+                            if (!td.classList.contains('bg-blue-100')) {
+                                td.classList.add('bg-blue-100');
+
+                                await fetch('/api/timetable', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        group_id: currentGroupId,
+                                        user_id: currentUser.id,
+                                        day_of_week: day.value,
+                                        block: block.value,
+                                        isOn: true
+                                    })
+                                });
+                            }
+                        } else {
+                            if (td.classList.contains('bg-blue-100')) {
+                                td.classList.remove('bg-blue-100');
+
+                                await fetch('/api/timetable', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        group_id: currentGroupId,
+                                        user_id: currentUser.id,
+                                        day_of_week: day.value,
+                                        block: block.value,
+                                        isOn: false
+                                    })
+                                });
+                            }
+                        }
+                    });
+
+                    tr.appendChild(td);
+                });
+
+                tbody.appendChild(tr);
+            });
+
+            table.appendChild(tbody);
+            container.appendChild(table);
+        }
+
+        async function loadMyTimetable() {
+            if (!currentUser || !currentGroupId) return;
+
+            // 전체 칸 색 제거
+             document.querySelectorAll('#timetable td[data-day]').forEach(td => {
+                td.classList.remove('bg-blue-100','bg-blue-200','bg-blue-300');
+            });
+
+            // DB에서 그룹 시간표 로드
+            const res = await fetch(`/api/timetable?group_id=${currentGroupId}&user_id=${currentUser.id}`);
+            const data = await res.json();
+
+            data.forEach(slot => {
+                const selector = `[data-day="${slot.day_of_week}"][data-block="${slot.block}"]`;
+                const td = document.querySelector(selector);
+                if (td) td.classList.add('bg-blue-100');
+            });
+        }
+
+        async function loadGroupTimetable() {
+            if (!currentGroupId) return;
+
+            // 전부 초기화
+            document.querySelectorAll('#timetable td[data-day]').forEach(td => {
+                td.classList.remove('bg-blue-100','bg-blue-200','bg-blue-300');
+            });
+
+            const res = await fetch(`/api/timetable?group_id=${currentGroupId}`);
+            const data = await res.json();
+
+            data.forEach(slot => {
+                const selector = `[data-day="${slot.day_of_week}"][data-block="${slot.block}"]`;
+                const td = document.querySelector(selector);
+                if (!td) return;
+
+                // 겹치는 인원 수에 따라 색 진하게. 일단은 3명 기준으로
+                if (slot.count >= 3) {
+                    td.classList.add('bg-blue-300');
+                } else if (slot.count === 2) {
+                    td.classList.add('bg-blue-200');
+                } else {
+                    td.classList.add('bg-blue-100');
+                }
+            });
+        }
+
+
     </script>
 </body>
 </html>
