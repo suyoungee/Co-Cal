@@ -50,6 +50,20 @@ CREATE TABLE schedules (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 ```
+3. [추가] timetable DB 세팅
+```
+USE cocal_db;
+
+CREATE TABLE study_timetable (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    group_id INT NOT NULL,
+    user_id INT NOT NULL,
+    day_of_week TINYINT NOT NULL,
+    block TINYINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uniq_slot (group_id, user_id, day_of_week, block)
+);
+```
 
 ### 4. 서버 실행 및 테스트
 1. VS Code(혹은 다른 IDE)의 터미널에서 'npm start'를 입력하여 실행시킵니다.
