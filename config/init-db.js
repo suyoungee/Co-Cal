@@ -42,6 +42,28 @@ const initQuery = `
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         UNIQUE KEY (group_id, user_id)
     );
+
+    -- 5. 시간표 테이블
+    CREATE TABLE IF NOT EXISTS study_timetable (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        group_id INT NOT NULL,
+        user_id INT NOT NULL,
+        day_of_week TINYINT NOT NULL,
+        block TINYINT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_slot (group_id, user_id, day_of_week, block)
+    );    
+
+    -- 6. 그룹 가입 신청 테이블 (대기열)
+    CREATE TABLE IF NOT EXISTS group_join_requests (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        group_id INT NOT NULL,
+        user_id INT NOT NULL,
+        requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (group_id) REFERENCES study_groups(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE KEY uniq_req (group_id, user_id) -- 중복 신청 방지
+    );
 `;
 
 const initDB = async () => {

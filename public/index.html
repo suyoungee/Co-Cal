@@ -104,9 +104,14 @@
                         <div class="p-4 bg-white rounded-lg shadow-lg">
                             <div class="flex items-center justify-between border-b pb-2">
                                 <h3 class="text-lg font-semibold text-gray-900">스터디 그룹</h3>
-                                <button id="btn-toggle-group-form" class="text-sm font-bold text-indigo-600 hover:text-indigo-800 px-2 py-1 rounded hover:bg-indigo-50">
-                                    + 만들기
-                                </button>
+                                <div class="flex gap-1">
+                                    <button id="btn-open-search-modal" class="text-xs font-bold text-gray-500 hover:text-indigo-600 px-2 py-1 rounded hover:bg-gray-100">
+                                        🔍 검색
+                                    </button>
+                                    <button id="btn-toggle-group-form" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 px-2 py-1 rounded hover:bg-indigo-50">
+                                        + 만들기
+                                    </button>
+                                </div>
                             </div>
 
                             <div id="create-group-form-container" class="hidden mt-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
@@ -207,7 +212,13 @@
                 <div class="mt-4">
                     <h4 class="text-sm font-bold text-gray-700 mb-2">멤버 목록</h4>
                     <ul id="modal-member-list" class="space-y-2 mb-4 max-h-40 overflow-y-auto bg-gray-50 p-2 rounded">
-                        </ul>
+                    </ul>
+
+                    <div id="leader-section" class="hidden mb-4 border-t pt-4 bg-yellow-50 p-2 rounded border border-yellow-200">
+                        <h4 class="text-xs font-bold text-yellow-800 mb-2">👑 가입 신청 관리 (방장 전용)</h4>
+                        <ul id="join-request-list" class="space-y-1 max-h-32 overflow-y-auto">
+                            </ul>
+                    </div>
 
                     <div class="border-t pt-4">
                         <label class="block text-xs font-bold text-gray-700 mb-1">멤버 초대하기</label>
@@ -216,10 +227,40 @@
                             <button id="btn-invite-member" class="bg-indigo-600 text-white text-xs px-3 py-1 rounded hover:bg-indigo-700">초대</button>
                         </div>
                     </div>
+                    
+                    <div class="border-t pt-4">
+                        </div>
+
+                    <div id="leader-delete-section" class="hidden mt-6 pt-4 border-t border-red-100 text-right">
+                        <p class="text-[10px] text-gray-400 mb-1">그룹을 삭제하면 복구할 수 없습니다.</p>
+                        <button id="btn-delete-group" class="bg-white border border-red-500 text-red-500 text-xs px-3 py-1.5 rounded hover:bg-red-50 font-bold transition">
+                            그룹 삭제하기
+                        </button>
+                    </div>
+
                 </div>
             </div>
         </div>
+    </div>
 
+    <div id="group-search-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md h-[500px] flex flex-col">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-xl font-bold text-gray-900">스터디 그룹 찾기</h3>
+                <button id="btn-close-search" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="search-group-keyword" class="flex-1 border rounded px-3 py-2 text-sm" placeholder="그룹 이름 검색...">
+                <button id="btn-search-group" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">검색</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto bg-gray-50 rounded p-2 border">
+                <ul id="search-result-list" class="space-y-3">
+                    <li class="text-sm text-gray-500 text-center mt-10">그룹명을 입력하고 검색 버튼을 누르세요.</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -249,6 +290,20 @@
             const modalMemberList = document.getElementById('modal-member-list');
             const btnCloseModal = document.getElementById('btn-close-modal');
             const btnInviteMember = document.getElementById('btn-invite-member');
+
+            // 검색 모달 관련
+            const btnOpenSearch = document.getElementById('btn-open-search-modal');
+            const searchModal = document.getElementById('group-search-modal');
+            const btnCloseSearch = document.getElementById('btn-close-search');
+            const searchInput = document.getElementById('search-group-keyword');
+            const btnSearch = document.getElementById('btn-search-group');
+            const searchResultList = document.getElementById('search-result-list');
+
+            // 방장 기능 관련
+            const leaderSection = document.getElementById('leader-section');
+            const joinRequestList = document.getElementById('join-request-list');
+            const leaderDeleteSection = document.getElementById('leader-delete-section');
+            const btnDeleteGroup = document.getElementById('btn-delete-group');
 
             // --- [함수 정의] ---
 
@@ -357,13 +412,22 @@
             };
 
             // 3. 모달 열기 함수
-            const openGroupModal = async (groupId, groupName) => {
+            const openGroupModal = async (groupId, groupName, createdBy) => {
                 currentGroupId = groupId;
                 modalGroupName.innerText = groupName;
                 groupModal.classList.remove('hidden');
 
-                // 멤버 목록 불러오기
                 loadGroupMembers(groupId);
+
+                // 방장 기능: 신청 관리 & 삭제 버튼 표시
+                if (currentUser.id === createdBy) {
+                    leaderSection.classList.remove('hidden');       // 가입 신청 관리
+                    leaderDeleteSection.classList.remove('hidden'); // 삭제 버튼 보이기
+                    loadJoinRequests(groupId);
+                } else {
+                    leaderSection.classList.add('hidden');
+                    leaderDeleteSection.classList.add('hidden');    // 삭제 버튼 숨기기
+                }
             };
 
 
@@ -640,11 +704,14 @@
                         const li = document.createElement('li');
                         li.className = 'p-2 border border-gray-100 rounded hover:bg-indigo-50 cursor-pointer transition';
                         li.innerHTML = `
-                            <div class="font-medium text-indigo-600">${group.name}</div>
+                            <div class="font-medium text-indigo-600">
+                                ${group.name}
+                                ${group.created_by === currentUser.id ? '👑' : ''}
+                            </div>
                             <div class="text-xs text-gray-500 truncate">${group.description || '설명 없음'}</div>
                         `;
                         li.addEventListener('click', () => {
-                            openGroupModal(group.id, group.name);
+                            openGroupModal(group.id, group.name, group.created_by);
                         });
                         groupListEl.appendChild(li);
                     });
@@ -731,6 +798,184 @@
             // 초기 렌더링
             renderCalendar();
         });
+
+
+        // [방장용] 가입 신청 목록 불러오기
+        const loadJoinRequests = async (groupId) => {
+            try {
+                const response = await fetch(`/api/groups/${groupId}/requests`);
+                const requests = await response.json();
+
+                joinRequestList.innerHTML = '';
+                if (requests.length === 0) {
+                    joinRequestList.innerHTML = '<li class="text-xs text-gray-400 text-center py-2">대기 중인 신청이 없습니다.</li>';
+                    return;
+                }
+
+                requests.forEach(req => {
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between items-center bg-white p-2 border rounded shadow-sm';
+                    li.innerHTML = `
+                        <div class="text-xs">
+                            <span class="font-bold text-gray-800">${req.name}</span>
+                            <span class="text-gray-500">(${req.email})</span>
+                        </div>
+                        <div class="flex gap-1">
+                            <button class="btn-approve bg-green-500 text-white text-[10px] px-2 py-1 rounded hover:bg-green-600">승인</button>
+                            <button class="btn-reject bg-red-500 text-white text-[10px] px-2 py-1 rounded hover:bg-red-600">거절</button>
+                        </div>
+                    `;
+                    
+                    // 승인 버튼
+                    li.querySelector('.btn-approve').addEventListener('click', () => handleJoinRequest(groupId, req.id, 'approve'));
+                    // 거절 버튼
+                    li.querySelector('.btn-reject').addEventListener('click', () => handleJoinRequest(groupId, req.id, 'reject'));
+
+                    joinRequestList.appendChild(li);
+                });
+            } catch (error) {
+                console.error('신청 목록 로드 실패:', error);
+            }
+        };
+
+        // [방장용] 가입 승인/거절 처리
+        const handleJoinRequest = async (groupId, requestId, action) => {
+            if (!confirm(action === 'approve' ? '가입을 승인하시겠습니까?' : '거절하시겠습니까?')) return;
+
+            try {
+                const response = await fetch(`/api/groups/${groupId}/requests/${requestId}/handle`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert(data.message);
+                    loadJoinRequests(groupId); // 목록 갱신
+                    loadGroupMembers(groupId); // (승인 시) 멤버 목록도 갱신
+                } else {
+                    alert('오류: ' + data.message);
+                }
+            } catch (error) {
+                console.error(error);
+                alert('처리 중 오류 발생');
+            }
+        };
+
+        // [검색용] 그룹 검색 및 결과 표시
+        const searchGroups = async () => {
+            const keyword = searchInput.value.trim();
+            // 키워드 없으면 전체 검색
+            try {
+                const response = await fetch(`/api/groups/search/all?keyword=${encodeURIComponent(keyword)}`);
+                const groups = await response.json();
+
+                searchResultList.innerHTML = '';
+                if (groups.length === 0) {
+                    searchResultList.innerHTML = '<li class="text-center text-gray-500 mt-4">검색 결과가 없습니다.</li>';
+                    return;
+                }
+
+                groups.forEach(group => {
+                    const li = document.createElement('li');
+                    li.className = 'bg-white border rounded p-3 shadow-sm hover:shadow-md transition';
+                    li.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-bold text-indigo-600">${group.name}</div>
+                                <div class="text-xs text-gray-500 mt-1">${group.description || '설명 없음'}</div>
+                                <div class="text-xs text-gray-400 mt-2">방장: ${group.creator_name} | 멤버: ${group.member_count}명</div>
+                            </div>
+                            <button class="btn-join-req bg-indigo-100 text-indigo-700 text-xs px-3 py-1.5 rounded hover:bg-indigo-200 font-bold">
+                                가입 신청
+                            </button>
+                        </div>
+                    `;
+
+                    // 가입 신청 버튼 클릭
+                    li.querySelector('.btn-join-req').addEventListener('click', async () => {
+                        if (!currentUser) return alert('로그인이 필요합니다.');
+                        if (confirm(`'${group.name}' 그룹에 가입 신청하시겠습니까?`)) {
+                            try {
+                                const res = await fetch(`/api/groups/${group.id}/join`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ user_id: currentUser.id })
+                                });
+                                const data = await res.json();
+                                alert(data.message);
+                            } catch (err) {
+                                console.error(err);
+                                alert('신청 실패');
+                            }
+                        }
+                    });
+
+                    searchResultList.appendChild(li);
+                });
+
+            } catch (error) {
+                console.error('검색 실패:', error);
+            }
+        };
+
+        // 검색 모달 이벤트
+        btnOpenSearch.addEventListener('click', () => {
+            searchModal.classList.remove('hidden');
+            searchInput.value = '';
+            searchResultList.innerHTML = ''; // 초기화
+            searchGroups(); // 열자마자 전체 목록 보여주기
+        });
+
+        btnCloseSearch.addEventListener('click', () => {
+            searchModal.classList.add('hidden');
+        });
+
+        btnSearch.addEventListener('click', searchGroups);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchGroups();
+        });
+
+        // 그룹 삭제 이벤트
+        btnDeleteGroup.addEventListener('click', async () => {
+            if (!currentGroupId) return;
+
+            // 정말 삭제할지 두 번 물어보기
+            if (!confirm('정말 이 스터디 그룹을 삭제하시겠습니까?')) return;
+            if (!confirm('삭제된 데이터는 복구할 수 없습니다. 정말 삭제합니까?')) return;
+
+            try {
+                // 삭제 요청 전송
+                const response = await fetch(`/api/groups/${currentGroupId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: currentUser.id }) // 방장 본인 확인
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(data.message);
+                    
+                    // 정리 및 화면 갱신
+                    groupModal.classList.add('hidden'); // 모달 닫기
+                    currentGroupId = null;
+                    loadGroups(); // 그룹 목록 새로고침 (삭제된 그룹 사라짐)
+                    
+                    // 혹시 캘린더가 남의 거였다면 내 걸로 복귀
+                    loadSchedules(currentUser.id, '나');
+                } else {
+                    alert('삭제 실패: ' + data.message);
+                }
+            } catch (error) {
+                console.error(error);
+                alert('서버 오류 발생');
+            }
+        });
     </script>
+
+
+
 </body>
 </html>

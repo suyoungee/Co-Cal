@@ -121,4 +121,139 @@ router.post('/:groupId/members', async (req, res) => {
     }
 });
 
+// 그룹 검색 API (GET /api/groups/search?keyword=...)
+router.get('/search/all', async (req, res) => {
+    const { keyword } = req.query;
+    try {
+        let query = `
+            SELECT g.id, g.name, g.description, u.name as creator_name, 
+            (SELECT COUNT(*) FROM group_members WHERE group_id = g.id) as member_count
+            FROM study_groups g
+            JOIN users u ON g.created_by = u.id
+        `;
+        
+        let params = [];
+        if (keyword) {
+            query += ' WHERE g.name LIKE ?';
+            params.push(`%${keyword}%`);
+        }
+        
+        query += ' ORDER BY g.created_at DESC';
+
+        const [groups] = await db.query(query, params);
+        res.json(groups);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
+// 가입 신청 API (POST /api/groups/:groupId/join)
+router.post('/:groupId/join', async (req, res) => {
+    const { groupId } = req.params;
+    const { user_id } = req.body;
+
+    try {
+        // 1. 이미 멤버인지 확인
+        const [memberCheck] = await db.query(
+            'SELECT id FROM group_members WHERE group_id = ? AND user_id = ?',
+            [groupId, user_id]
+        );
+        if (memberCheck.length > 0) return res.status(409).json({ message: '이미 가입된 그룹입니다.' });
+
+        // 2. 이미 신청했는지 확인
+        const [requestCheck] = await db.query(
+            'SELECT id FROM group_join_requests WHERE group_id = ? AND user_id = ?',
+            [groupId, user_id]
+        );
+        if (requestCheck.length > 0) return res.status(409).json({ message: '이미 가입 신청을 했습니다.' });
+
+        // 3. 신청 대기열에 추가
+        await db.query(
+            'INSERT INTO group_join_requests (group_id, user_id) VALUES (?, ?)',
+            [groupId, user_id]
+        );
+        res.status(201).json({ message: '가입 신청을 보냈습니다. 방장의 승인을 기다리세요.' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
+// 가입 신청 목록 조회 (방장 전용) (GET /api/groups/:groupId/requests)
+router.get('/:groupId/requests', async (req, res) => {
+    const { groupId } = req.params;
+    try {
+        const query = `
+            SELECT r.id, r.user_id, u.name, u.email, r.requested_at
+            FROM group_join_requests r
+            JOIN users u ON r.user_id = u.id
+            WHERE r.group_id = ?
+            ORDER BY r.requested_at ASC
+        `;
+        const [requests] = await db.query(query, [groupId]);
+        res.json(requests);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
+// 가입 승인/거절 API (POST /api/groups/:groupId/requests/:requestId/handle)
+router.post('/:groupId/requests/:requestId/handle', async (req, res) => {
+    const { groupId, requestId } = req.params;
+    const { action } = req.body; // 'approve' 또는 'reject'
+
+    try {
+        // 신청 내역 가져오기 (누가 신청했는지 알기 위해)
+        const [reqData] = await db.query('SELECT user_id FROM group_join_requests WHERE id = ?', [requestId]);
+        if (reqData.length === 0) return res.status(404).json({ message: '신청 내역이 없습니다.' });
+        
+        const targetUserId = reqData[0].user_id;
+
+        if (action === 'approve') {
+            // 승인: 멤버 테이블에 추가
+            await db.query('INSERT INTO group_members (group_id, user_id) VALUES (?, ?)', [groupId, targetUserId]);
+        }
+
+        // 승인이든 거절이든 대기열에서는 삭제
+        await db.query('DELETE FROM group_join_requests WHERE id = ?', [requestId]);
+
+        res.json({ message: action === 'approve' ? '가입을 승인했습니다.' : '가입을 거절했습니다.' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
+// 그룹 삭제 API (DELETE /api/groups/:groupId)
+router.delete('/:groupId', async (req, res) => {
+    const { groupId } = req.params;
+    const { user_id } = req.body; // 요청한 사람 (방장인지 확인용)
+
+    try {
+        // 1. 그룹이 존재하고, 요청한 사람이 방장인지 확인
+        const [group] = await db.query('SELECT created_by FROM study_groups WHERE id = ?', [groupId]);
+        
+        if (group.length === 0) {
+            return res.status(404).json({ message: '그룹을 찾을 수 없습니다.' });
+        }
+
+        if (group[0].created_by !== user_id) {
+            return res.status(403).json({ message: '방장만 그룹을 삭제할 수 있습니다.' });
+        }
+
+        // 2. 그룹 삭제 (Cascade 설정 덕분에 멤버, 신청내역 등도 자동 삭제됨)
+        await db.query('DELETE FROM study_groups WHERE id = ?', [groupId]);
+
+        res.json({ message: '스터디 그룹이 삭제되었습니다.' });
+
+    } catch (error) {
+        console.error('그룹 삭제 실패:', error);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
 module.exports = router;
