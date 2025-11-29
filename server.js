@@ -3,9 +3,12 @@ const express = require('express');
 const app = express();
 const path = require('path');
 const db = require('./config/database'); //서버가 켜질 때 DB 연결 시도
+const initDB = require('./config/init-db');
+initDB(); // DB 연결 후 바로 실행
 const authRoutes = require('./routes/auth');
 const scheduleRoutes = require('./routes/schedule');
 const holidayRoutes = require('./routes/holiday');
+const groupRoutes = require('./routes/groups');
 const timetableRoutes = require('./routes/timetable');
 const userRouter = require('./routes/user');
 
@@ -23,6 +26,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/holidays', holidayRoutes);
+app.use('/api/groups', groupRoutes);
 app.use('/api/timetable', timetableRoutes);
 app.use('/api/user', userRouter);
 

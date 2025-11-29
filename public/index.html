@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Co-Cal (기초 뼈대)</title>
+    <title>Co-Cal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 캘린더 날짜 셀의 최소 높이 지정 (모양만 잡기 위함) */
-        .calendar-day-placeholder {
-            min-height: 100px;
-        }
+        .calendar-day-placeholder { min-height: 100px; }
+        .select-none { user-select: none; } /* 시간표 드래그 시 텍스트 선택 방지 */
     </style>
 </head>
 <body class="bg-gray-100">
@@ -19,31 +17,19 @@
         <div id="login-page" class="flex items-center justify-center min-h-screen">
             <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-lg">
                 <h2 class="text-3xl font-bold text-center text-gray-900">Co-Cal 로그인</h2>
-                
                 <form id="login-form" class="space-y-6">
                     <div>
                         <label for="login-email" class="block text-sm font-medium text-gray-700">이메일</label>
-                        <input id="login-email" name="email" type="email" required
-                               class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <input id="login-email" name="email" type="email" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
-                    
                     <div>
                         <label for="login-password" class="block text-sm font-medium text-gray-700">비밀번호</label>
-                        <input id="login-password" name="password" type="password" required
-                               class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <input id="login-password" name="password" type="password" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
-                    
-                    <button type="submit"
-                            class="w-full px-4 py-2 font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        로그인
-                    </button>
+                    <button type="submit" class="w-full px-4 py-2 font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700">로그인</button>
                 </form>
-
                 <p class="text-sm text-center text-gray-600">
-                    계정이 없으신가요?
-                    <button id="show-signup" class="font-medium text-indigo-600 hover:text-indigo-500">
-                        회원가입하기
-                    </button>
+                    계정이 없으신가요? <button id="show-signup" class="font-medium text-indigo-600 hover:text-indigo-500">회원가입하기</button>
                 </p>
             </div>
         </div>
@@ -51,35 +37,23 @@
         <div id="signup-page" class="hidden flex items-center justify-center min-h-screen">
             <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-lg">
                 <h2 class="text-3xl font-bold text-center text-gray-900">Co-Cal 회원가입</h2>
-                
                 <form id="signup-form" class="space-y-6">
                     <div>
                         <label for="signup-name" class="block text-sm font-medium text-gray-700">이름</label>
-                        <input id="signup-name" name="name" type="text" required
-                               class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <input id="signup-name" name="name" type="text" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                     <div>
                         <label for="signup-email" class="block text-sm font-medium text-gray-700">이메일</label>
-                        <input id="signup-email" name="email" type="email" required
-                               class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <input id="signup-email" name="email" type="email" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                     <div>
                         <label for="signup-password" class="block text-sm font-medium text-gray-700">비밀번호</label>
-                        <input id="signup-password" name="password" type="password" required
-                               class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <input id="signup-password" name="password" type="password" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
-                    
-                    <button type="submit"
-                            class="w-full px-4 py-2 font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        회원가입
-                    </button>
+                    <button type="submit" class="w-full px-4 py-2 font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700">회원가입</button>
                 </form>
-
                 <p class="text-sm text-center text-gray-600">
-                    이미 계정이 있으신가요?
-                    <button id="show-login" class="font-medium text-indigo-600 hover:text-indigo-500">
-                        로그인하기
-                    </button>
+                    이미 계정이 있으신가요? <button id="show-login" class="font-medium text-indigo-600 hover:text-indigo-500">로그인하기</button>
                 </p>
             </div>
         </div>
@@ -90,12 +64,8 @@
                     <h1 class="text-2xl font-bold text-indigo-600">Co-Cal</h1>
                     <div class="flex items-center space-x-4">
                         <span class="text-sm font-medium text-gray-700">로그인됨 (임시)</span>
-                        <button id="logout-button" class="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600">
-                            로그아웃
-                        </button>
-                        <button id="settings-button" class="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
-                            ⚙️ 설정
-                        </button>
+                        <button id="logout-button" class="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600">로그아웃</button>
+                        <button id="settings-button" class="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">⚙️ 설정</button>
                     </div>
                 </div>
             </header>
@@ -103,40 +73,51 @@
             <main class="container p-4 mx-auto mt-6 max-w-7xl">
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-4">
 
-                    <aside class="lg:col-span-1">
+                    <aside class="lg:col-span-1 space-y-6">
                         <div class="p-4 bg-white rounded-lg shadow-lg">
-                            <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">스터디 그룹</h3>
-                            <ul class="mt-4 space-y-3">
-                                <li class="font-medium text-indigo-600">3조 웹응용프로그래밍</li>
+                            <div class="flex items-center justify-between border-b pb-2">
+                                <h3 class="text-lg font-semibold text-gray-900">스터디 그룹</h3>
+                                <div class="flex gap-1">
+                                    <button id="btn-open-search-modal" class="text-xs font-bold text-gray-500 hover:text-indigo-600 px-2 py-1 rounded hover:bg-gray-100">🔍 검색</button>
+                                    <button id="btn-toggle-group-form" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 px-2 py-1 rounded hover:bg-indigo-50">+ 만들기</button>
+                                </div>
+                            </div>
+
+                            <div id="create-group-form-container" class="hidden mt-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">그룹 이름</label>
+                                <input type="text" id="new-group-name" class="w-full px-2 py-1 mb-2 text-sm border rounded" placeholder="예: 정보처리기사 스터디">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">설명 (선택)</label>
+                                <textarea id="new-group-desc" class="w-full px-2 py-1 mb-2 text-sm border rounded" rows="2" placeholder="함께 공부해요!"></textarea>
+                                <div class="flex gap-2">
+                                    <button id="btn-create-group" class="flex-1 bg-indigo-600 text-white text-xs py-1.5 rounded hover:bg-indigo-700">완료</button>
+                                    <button id="btn-cancel-group" class="flex-1 bg-white border border-gray-300 text-gray-700 text-xs py-1.5 rounded hover:bg-gray-50">취소</button>
+                                </div>
+                            </div>
+
+                            <ul id="my-group-list" class="mt-4 space-y-3">
+                                <li class="text-sm text-gray-500">가입된 그룹이 없습니다.</li>
                             </ul>
                         </div>
 
-                        <!-- [일정 조율] 타임테이블 -->
-                        <div class="p-4 bg-white rounded-lg shadow-lg mt-6 pl-2">
-                            <h3 class="text-lg font-semibold text-gray-900 border-b pb-2 pl-2">일정 조율</h3>
+                        <div class="p-4 bg-white rounded-lg shadow-lg">
+                            <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">일정 조율</h3>
                             <div class="flex gap-2 mt-2 text-xs">
-                                <button id="btn-my-timetable"
-                                        class="px-2 py-1 border rounded bg-indigo-600 text-white">
-                                    내 시간표 편집
-                                </button>
-                                <button id="btn-group-timetable"
-                                        class="px-2 py-1 border rounded bg-gray-100">
-                                    그룹 시간표 보기
-                                </button>
+                                <button id="btn-my-timetable" class="px-2 py-1 border rounded bg-indigo-600 text-white">내 시간표 편집</button>
+                                <button id="btn-group-timetable" class="px-2 py-1 border rounded bg-gray-100">그룹 시간표 보기</button>
                             </div>
-
-                            <div id="timetable" class="overflow-x-auto mt-4 ml-0 pl-0 pr-0">
-                                <!-- JS로 자동 생성됨 -->
-                            </div>
+                            <div id="timetable" class="overflow-x-auto mt-4 select-none">
+                                </div>
                         </div>
-
                     </aside>
 
                     <section class="lg:col-span-2">
                         <div class="p-4 bg-white rounded-lg shadow-lg">
                             <div class="flex items-center justify-between mb-4">
                                 <button id="prev-month" class="px-3 py-1 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">&lt; 이전</button>
-                                <h2 id="current-month-year" class="text-xl font-bold"></h2>
+                                <div class="text-center">
+                                    <h2 id="current-month-year" class="text-xl font-bold cursor-pointer hover:text-indigo-600"></h2>
+                                    <button id="btn-back-to-my" class="hidden text-xs text-white bg-indigo-500 px-2 py-1 rounded mt-1 hover:bg-indigo-600 shadow-sm transition-all">↻ 내 캘린더로 복귀</button>
+                                </div>
                                 <button id="next-month" class="px-3 py-1 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">다음 &gt;</button>
                             </div>
                             <div class="grid grid-cols-7 gap-1 text-center font-semibold">
@@ -148,792 +129,850 @@
                                 <div class="py-2">금</div>
                                 <div class="py-2 text-blue-500">토</div>
                             </div>
-                            <div id="calendar-grid" class="grid grid-cols-7 gap-1 mt-1 min-h-[500px]">
-                            </div>
+                            <div id="calendar-grid" class="grid grid-cols-7 gap-1 mt-1 min-h-[500px]"></div>
                         </div>
                     </section>
 
                     <aside class="lg:col-span-1">
                         <div class="p-4 bg-white rounded-lg shadow-lg h-full flex flex-col">
                             <h3 class="text-lg font-semibold text-gray-900">학습 기록</h3>
-                            
                             <div class="mt-4 flex-1 flex flex-col">
                                 <label for="log-date" class="block text-sm font-medium text-gray-700">선택한 날짜</label>
-                                <input type="text" id="log-date" readonly
-                                    class="w-full px-3 py-2 mt-1 bg-gray-100 border border-gray-300 rounded-md mb-4"
-                                    placeholder="캘린더에서 날짜 선택">
-                                
+                                <input type="text" id="log-date" readonly class="w-full px-3 py-2 mt-1 bg-gray-100 border border-gray-300 rounded-md mb-4" placeholder="캘린더에서 날짜 선택">
                                 <div id="schedule-list-container" class="hidden mb-4">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">저장된 기록 (클릭하여 수정)</label>
-                                    <ul id="schedule-list" class="space-y-2 max-h-40 overflow-y-auto border p-2 rounded bg-gray-50">
-                                    </ul>
-                                    <button id="btn-new-entry" class="hidden w-full mt-2 text-xs text-indigo-600 hover:text-indigo-800 underline text-right">
-                                        + 새 기록 작성하기 (수정 취소)
-                                    </button>
+                                    <ul id="schedule-list" class="space-y-2 max-h-40 overflow-y-auto border p-2 rounded bg-gray-50"></ul>
+                                    <button id="btn-new-entry" class="hidden w-full mt-2 text-xs text-indigo-600 hover:text-indigo-800 underline text-right">+ 새 기록 작성하기 (수정 취소)</button>
                                 </div>
-
                                 <label for="log-content" class="block text-sm font-medium text-gray-700">내용 작성</label>
-                                <textarea id="log-content" rows="5"
-                                        class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="오늘 공부한 내용을 기록하세요..."></textarea>
-                                
+                                <textarea id="log-content" rows="5" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="오늘 공부한 내용을 기록하세요..."></textarea>
                                 <div class="flex gap-2 mt-4">
-                                    <button id="save-log" class="flex-1 px-4 py-2 font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700">
-                                        기록 저장
-                                    </button>
-                                    <button id="delete-log" class="hidden flex-1 px-4 py-2 font-medium text-white bg-red-500 rounded-md shadow-sm hover:bg-red-600">
-                                        삭제
-                                    </button>
+                                    <button id="save-log" class="flex-1 px-4 py-2 font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700">기록 저장</button>
+                                    <button id="delete-log" class="hidden flex-1 px-4 py-2 font-medium text-white bg-red-500 rounded-md shadow-sm hover:bg-red-600">삭제</button>
                                 </div>
                             </div>
                         </div>
                     </aside>
-
                 </div>
             </main>
         </div>
 
-    </div>
-
-    <div id="settings-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md relative">
-            <button id="close-settings" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">✖</button>
-            
-            <h2 class="text-2xl font-bold mb-6 text-gray-800">계정 설정</h2>
-
-            <div class="mb-8">
-                <h3 class="text-lg font-semibold mb-3 border-b pb-1">비밀번호 변경</h3>
-                <div class="space-y-3">
-                    <input type="password" id="current-pw" placeholder="현재 비밀번호" class="w-full px-3 py-2 border rounded">
-                    <input type="password" id="new-pw" placeholder="새 비밀번호" class="w-full px-3 py-2 border rounded">
-                    <button id="btn-change-pw" class="w-full py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">변경하기</button>
+        <div id="group-detail-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h3 id="modal-group-name" class="text-xl font-bold text-indigo-600">그룹 이름</h3>
+                    <button id="btn-close-modal" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
                 </div>
-            </div>
+                <div class="mt-4">
+                    <h4 class="text-sm font-bold text-gray-700 mb-2">멤버 목록</h4>
+                    <ul id="modal-member-list" class="space-y-2 mb-4 max-h-40 overflow-y-auto bg-gray-50 p-2 rounded"></ul>
+                    
+                    <div id="leader-section" class="hidden mb-4 border-t pt-4 bg-yellow-50 p-2 rounded border border-yellow-200">
+                        <h4 class="text-xs font-bold text-yellow-800 mb-2">가입 신청 관리</h4>
+                        <ul id="join-request-list" class="space-y-1 max-h-32 overflow-y-auto"></ul>
+                    </div>
 
-            <div>
-                <h3 class="text-lg font-semibold mb-3 border-b pb-1 text-red-600">계정 삭제</h3>
-                <p class="text-sm text-gray-600 mb-2">계정을 삭제하려면 현재 비밀번호를 입력하세요.</p>
-                <div class="flex gap-2">
-                    <input type="password" id="delete-confirm-pw" placeholder="비밀번호 확인" class="flex-1 px-3 py-2 border rounded">
-                    <button id="btn-delete-account" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 whitespace-nowrap">삭제</button>
+                    <div class="border-t pt-4">
+                        <label class="block text-xs font-bold text-gray-700 mb-1">멤버 초대하기</label>
+                        <div class="flex gap-2">
+                            <input type="email" id="invite-email" class="flex-1 border rounded px-2 py-1 text-sm" placeholder="친구 이메일 입력">
+                            <button id="btn-invite-member" class="bg-indigo-600 text-white text-xs px-3 py-1 rounded hover:bg-indigo-700">초대</button>
+                        </div>
+                    </div>
+
+                    <div id="leader-delete-section" class="hidden mt-6 pt-4 border-t border-red-100 text-right">
+                        <p class="text-[10px] text-gray-400 mb-1">그룹을 삭제하면 복구할 수 없습니다.</p>
+                        <button id="btn-delete-group" class="bg-white border border-red-500 text-red-500 text-xs px-3 py-1.5 rounded hover:bg-red-50 font-bold transition">그룹 삭제하기</button>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <div id="group-search-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md h-[500px] flex flex-col">
+                <div class="flex justify-between items-center border-b pb-3 mb-4">
+                    <h3 class="text-xl font-bold text-gray-900">스터디 그룹 찾기</h3>
+                    <button id="btn-close-search" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                </div>
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="search-group-keyword" class="flex-1 border rounded px-3 py-2 text-sm" placeholder="그룹 이름 검색...">
+                    <button id="btn-search-group" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">검색</button>
+                </div>
+                <div class="flex-1 overflow-y-auto bg-gray-50 rounded p-2 border">
+                    <ul id="search-result-list" class="space-y-3">
+                        <li class="text-sm text-gray-500 text-center mt-10">그룹명을 입력하고 검색 버튼을 누르세요.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="settings-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md relative">
+                <button id="close-settings" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">✖</button>
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">계정 설정</h2>
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold mb-3 border-b pb-1">비밀번호 변경</h3>
+                    <div class="space-y-3">
+                        <input type="password" id="current-pw" placeholder="현재 비밀번호" class="w-full px-3 py-2 border rounded">
+                        <input type="password" id="new-pw" placeholder="새 비밀번호" class="w-full px-3 py-2 border rounded">
+                        <button id="btn-change-pw" class="w-full py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">변경하기</button>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-3 border-b pb-1 text-red-600">계정 삭제</h3>
+                    <p class="text-sm text-gray-600 mb-2">계정을 삭제하려면 현재 비밀번호를 입력하세요.</p>
+                    <div class="flex gap-2">
+                        <input type="password" id="delete-confirm-pw" placeholder="비밀번호 확인" class="flex-1 px-3 py-2 border rounded">
+                        <button id="btn-delete-account" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 whitespace-nowrap">삭제</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
+
     <script>
-        // [수정] 전역 변수로 옮김
-        let currentUser = null; // 로그인한 유저 정보를 담을 변수
+        // --- 전역 변수 ---
+        let currentUser = null; 
+        
+        // 시간표용 상수
+        const DAYS = [
+            { label: '일', value: 0 }, { label: '월', value: 1 }, { label: '화', value: 2 },
+            { label: '수', value: 3 }, { label: '목', value: 4 }, { label: '금', value: 5 }, { label: '토', value: 6 }
+        ];
+        const BLOCKS = Array.from({ length: 14 }, (_, i) => {
+            const hour = 10 + i; return { label: `${hour.toString().padStart(2, '0')}:00`, value: i + 1 };
+        });
 
         document.addEventListener('DOMContentLoaded', () => {
+            // --- 상태 변수 ---
+            let selectedScheduleId = null; 
+            let dailySchedules = {};       
+            let currentGroupId = null; // 현재 선택된 그룹 (자동으로 1번째 그룹 선택됨)
+            let timetableMode = 'my';
+            let isDragging = false;
+            let dragMode = "paint";
 
-            let selectedScheduleId = null; // 현재 선택된 일정의 ID (수정/삭제용)
-            let dailySchedules = {};       // 날짜별 일정 데이터 저장소 {"2025-11-19": {id: 5, content: "..."}}
+            document.addEventListener("mouseup", () => { isDragging = false; });
             
-            // --- 페이지 DOM 요소 ---
+            // --- DOM 요소 가져오기 ---
             const loginPage = document.getElementById('login-page');
             const signupPage = document.getElementById('signup-page');
             const mainPage = document.getElementById('main-page');
-
-            // --- 버튼 DOM 요소 ---
             const showSignupBtn = document.getElementById('show-signup');
             const showLoginBtn = document.getElementById('show-login');
             const loginForm = document.getElementById('login-form');
             const signupForm = document.getElementById('signup-form');
             const logoutBtn = document.getElementById('logout-button');
 
-            // --- 페이지 이동 로직 ---
+            const calendarGrid = document.getElementById('calendar-grid');
+            const monthYearTitle = document.getElementById('current-month-year');
+            const prevBtn = document.getElementById('prev-month');
+            const nextBtn = document.getElementById('next-month');
+            const saveLogBtn = document.getElementById('save-log');
+            const deleteLogBtn = document.getElementById('delete-log');
+            const newEntryBtn = document.getElementById('btn-new-entry');
+            const backBtn = document.getElementById('btn-back-to-my');
 
-            // '회원가입하기' 버튼 클릭 시
-            showSignupBtn.addEventListener('click', () => {
-                loginPage.classList.add('hidden');
-                signupPage.classList.remove('hidden');
-            });
+            const groupListEl = document.getElementById('my-group-list');
+            const btnToggleGroup = document.getElementById('btn-toggle-group-form');
+            const groupFormContainer = document.getElementById('create-group-form-container');
+            const btnCreateGroup = document.getElementById('btn-create-group');
+            const btnCancelGroup = document.getElementById('btn-cancel-group');
+            const btnOpenSearch = document.getElementById('btn-open-search-modal'); 
 
-            // '로그인하기' 버튼 클릭 시
-            showLoginBtn.addEventListener('click', () => {
-                signupPage.classList.add('hidden');
-                loginPage.classList.remove('hidden');
-            });
+            const searchModal = document.getElementById('group-search-modal');
+            const btnCloseSearch = document.getElementById('btn-close-search');
+            const searchInput = document.getElementById('search-group-keyword');
+            const btnSearch = document.getElementById('btn-search-group');
+            const searchResultList = document.getElementById('search-result-list');
 
-            // '로그인' 폼 제출 시 로직 (서버 통신 추가)
+            const groupModal = document.getElementById('group-detail-modal');
+            const modalGroupName = document.getElementById('modal-group-name');
+            const modalMemberList = document.getElementById('modal-member-list');
+            const btnCloseModal = document.getElementById('btn-close-modal');
+            const btnInviteMember = document.getElementById('btn-invite-member');
+            
+            const leaderSection = document.getElementById('leader-section');
+            const joinRequestList = document.getElementById('join-request-list');
+            const leaderDeleteSection = document.getElementById('leader-delete-section');
+            const btnDeleteGroup = document.getElementById('btn-delete-group');
+
+            const btnMyTimetable = document.getElementById('btn-my-timetable');
+            const btnGroupTimetable = document.getElementById('btn-group-timetable');
+            const settingsModal = document.getElementById('settings-modal');
+            const settingsBtn = document.getElementById('settings-button');
+            const closeSettingsBtn = document.getElementById('close-settings');
+
+
+            // --- [함수 정의] ---
+
+            // [그룹] 목록 로드 및 자동 선택
+            const loadGroups = async () => {
+                if (!currentUser) return;
+                try {
+                    const response = await fetch(`/api/groups?user_id=${currentUser.id}`);
+                    const groups = await response.json();
+                    groupListEl.innerHTML = ''; 
+
+                    if (groups.length === 0) {
+                        groupListEl.innerHTML = '<li class="text-sm text-gray-500">가입된 그룹이 없습니다.</li>';
+                        currentGroupId = null; // 그룹 없으면 null
+                        return;
+                    }
+
+                    // ★ 핵심: 첫 번째 그룹 자동 선택
+                    if (!currentGroupId && groups.length > 0) {
+                        currentGroupId = groups[0].id;
+                        // 자동 선택된 그룹의 시간표 로드
+                        loadMyTimetable();
+                        loadGroupTimetable();
+                    }
+
+                    groups.forEach(group => {
+                        const li = document.createElement('li');
+                        li.className = 'p-2 border border-gray-100 rounded hover:bg-indigo-50 cursor-pointer transition flex justify-between items-center';
+                        
+                        // 현재 선택된 그룹 강조
+                        if(group.id === currentGroupId) {
+                            li.classList.add('bg-indigo-50', 'border-indigo-200');
+                        }
+
+                        li.innerHTML = `
+                            <div>
+                                <div class="font-medium text-indigo-600 flex items-center gap-1">
+                                    ${group.name}
+                                    ${group.created_by === currentUser.id ? '<span class="text-[10px] bg-yellow-100 text-yellow-700 px-1 rounded">👑</span>' : ''}
+                                </div>
+                                <div class="text-xs text-gray-500 truncate">${group.description || '설명 없음'}</div>
+                            </div>
+                        `;
+                        
+                        // 클릭 시 그룹 전환 및 모달 열기
+                        li.addEventListener('click', () => {
+                            currentGroupId = group.id; // 선택된 그룹 변경
+                            loadGroups(); // UI 갱신 (강조 표시)
+                            loadMyTimetable(); // 시간표 갱신
+                            loadGroupTimetable();
+                            openGroupModal(group.id, group.name, group.created_by);
+                        });
+                        groupListEl.appendChild(li);
+                    });
+                } catch (error) { console.error('그룹 로드 실패:', error); }
+            };
+
+            // [시간표] UI 렌더링
+            const renderTimetableUI = () => {
+                const container = document.getElementById('timetable');
+                if (!container) return;
+                container.innerHTML = '';
+
+                const table = document.createElement('table');
+                table.className = 'min-w-full border-collapse select-none';
+                const thead = document.createElement('thead');
+                const row = document.createElement('tr');
+                row.appendChild(document.createElement('th')); 
+                DAYS.forEach(d => {
+                    const th = document.createElement('th');
+                    th.textContent = d.label;
+                    th.className = 'p-2 text-center font-medium text-gray-700';
+                    row.appendChild(th);
+                });
+                thead.appendChild(row);
+                table.appendChild(thead);
+
+                const tbody = document.createElement('tbody');
+                BLOCKS.forEach(block => {
+                    const tr = document.createElement('tr');
+                    const timeTd = document.createElement('td');
+                    timeTd.textContent = block.label;
+                    timeTd.className = 'text-gray-600 text-sm w-10 text-right pr-1 select-none';
+                    tr.appendChild(timeTd);
+
+                    DAYS.forEach(day => {
+                        const td = document.createElement('td');
+                        td.className = 'border h-10 cursor-pointer bg-white hover:bg-blue-50 transition';
+                        td.dataset.day = day.value;
+                        td.dataset.block = block.value;
+
+                        // 드래그 로직
+                        td.addEventListener('mousedown', async (e) => {
+                            if (!currentUser) return;
+                            // 그룹 없으면 무시 (오류 방지)
+                            if (!currentGroupId) return; 
+                            if (timetableMode !== 'my') return;
+
+                            isDragging = true;
+                            const alreadyOn = td.classList.contains('bg-blue-100');
+                            dragMode = alreadyOn ? 'erase' : 'paint';
+                            toggleTimeBlock(td, day.value, block.value, dragMode === 'paint');
+                            e.preventDefault();
+                        });
+                        td.addEventListener('mouseenter', async () => {
+                            if (!isDragging || timetableMode !== 'my') return;
+                            if (dragMode === 'paint' && !td.classList.contains('bg-blue-100')) {
+                                toggleTimeBlock(td, day.value, block.value, true);
+                            } else if (dragMode === 'erase' && td.classList.contains('bg-blue-100')) {
+                                toggleTimeBlock(td, day.value, block.value, false);
+                            }
+                        });
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+                table.appendChild(tbody);
+                container.appendChild(table);
+            };
+
+            const toggleTimeBlock = async (td, day, block, isOn) => {
+                if(isOn) td.classList.add('bg-blue-100');
+                else td.classList.remove('bg-blue-100');
+
+                // 현재 선택된 그룹(currentGroupId) 기준으로 저장
+                await fetch('/api/timetable', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ group_id: currentGroupId, user_id: currentUser.id, day_of_week: day, block: block, isOn: isOn })
+                });
+            };
+
+            // 내 시간표 로드
+            const loadMyTimetable = async () => {
+                if (!currentUser || !currentGroupId) return;
+                // 초기화
+                document.querySelectorAll('#timetable td[data-day]').forEach(td => td.classList.remove('bg-blue-100','bg-blue-200','bg-blue-300'));
+                
+                const res = await fetch(`/api/timetable?group_id=${currentGroupId}&user_id=${currentUser.id}`);
+                const data = await res.json();
+                data.forEach(slot => {
+                    const td = document.querySelector(`[data-day="${slot.day_of_week}"][data-block="${slot.block}"]`);
+                    if (td) td.classList.add('bg-blue-100');
+                });
+                btnMyTimetable.classList.add('bg-indigo-600', 'text-white');
+                btnMyTimetable.classList.remove('bg-gray-100', 'text-gray-700');
+                btnGroupTimetable.classList.remove('bg-indigo-600', 'text-white');
+            };
+
+            // 그룹 시간표 로드 (겹치는 시간 확인)
+            const loadGroupTimetable = async () => {
+                if (!currentGroupId) return;
+                document.querySelectorAll('#timetable td[data-day]').forEach(td => td.classList.remove('bg-blue-100','bg-blue-200','bg-blue-300'));
+
+                const res = await fetch(`/api/timetable?group_id=${currentGroupId}`);
+                const data = await res.json();
+                data.forEach(slot => {
+                    const td = document.querySelector(`[data-day="${slot.day_of_week}"][data-block="${slot.block}"]`);
+                    if (td) {
+                        if (slot.count >= 3) td.classList.add('bg-blue-300');
+                        else if (slot.count === 2) td.classList.add('bg-blue-200');
+                        else td.classList.add('bg-blue-100');
+                    }
+                });
+                btnGroupTimetable.classList.add('bg-indigo-600', 'text-white');
+                btnGroupTimetable.classList.remove('bg-gray-100', 'text-gray-700');
+                btnMyTimetable.classList.remove('bg-indigo-600', 'text-white');
+            };
+
+            // [일정] 불러오기
+            const loadSchedules = async (targetUserId = currentUser.id, targetUserName = '나') => {
+                if (!targetUserId) return;
+                dailySchedules = {}; 
+                document.querySelectorAll('[id^="dots-"]').forEach(el => el.innerHTML = '');
+                
+                try {
+                    const response = await fetch(`/api/schedules?user_id=${targetUserId}`);
+                    const schedules = await response.json();
+                    const isMe = (targetUserId === currentUser.id);
+                    const dotColorClass = isMe ? 'bg-red-500' : 'bg-blue-500';
+
+                    schedules.forEach(schedule => {
+                        if (!dailySchedules[schedule.date]) dailySchedules[schedule.date] = [];
+                        dailySchedules[schedule.date].push(schedule);
+                        const dotContainer = document.getElementById(`dots-${schedule.date}`);
+                        if (dotContainer) {
+                            const dot = document.createElement('div');
+                            dot.className = `w-2 h-2 ${dotColorClass} rounded-full`; 
+                            dotContainer.appendChild(dot);
+                        }
+                    });
+
+                    const textArea = document.getElementById('log-content');
+                    if (!isMe) {
+                        textArea.placeholder = `${targetUserName}님의 공부 기록입니다. (보기 전용)`;
+                        textArea.disabled = true;
+                        saveLogBtn.classList.add('hidden');
+                        deleteLogBtn.classList.add('hidden');
+                        newEntryBtn.classList.add('hidden');
+                        backBtn.classList.remove('hidden');
+                    } else {
+                        textArea.placeholder = "오늘 공부한 내용을 기록하세요...";
+                        textArea.disabled = false;
+                        saveLogBtn.classList.remove('hidden');
+                        backBtn.classList.add('hidden');
+                    }
+                } catch (error) { console.error('일정 로드 실패:', error); }
+            };
+
+            // [그룹] 상세 모달 열기
+            const openGroupModal = async (groupId, groupName, createdBy) => {
+                currentGroupId = groupId;
+                modalGroupName.innerText = groupName;
+                groupModal.classList.remove('hidden');
+
+                // 방장 ID(createdBy)를 넘겨줌
+                loadGroupMembers(groupId, createdBy);
+
+                if (currentUser.id === createdBy) {
+                    if(leaderSection) leaderSection.classList.remove('hidden');
+                    if(leaderDeleteSection) leaderDeleteSection.classList.remove('hidden');
+                    loadJoinRequests(groupId);
+                } else {
+                    if(leaderSection) leaderSection.classList.add('hidden');
+                    if(leaderDeleteSection) leaderDeleteSection.classList.add('hidden');
+                }
+                
+                // 시간표 전환
+                if(timetableMode === 'group') loadGroupTimetable();
+            };
+
+            // [그룹] 멤버 탈퇴/추방 처리 함수
+            const removeMember = async (groupId, targetMemberId, type) => {
+                const confirmMsg = type === 'leave' ? '정말 그룹을 탈퇴하시겠습니까?' : '정말 이 멤버를 추방하시겠습니까?';
+                if (!confirm(confirmMsg)) return;
+
+                try {
+                    const response = await fetch(`/api/groups/${groupId}/members/${targetMemberId}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ requesterId: currentUser.id }) // 요청자(나) 정보 전송
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        alert(data.message);
+                        
+                        if (type === 'leave') {
+                            // 내가 나간 거면 모달 닫고 목록 갱신
+                            groupModal.classList.add('hidden');
+                            loadGroups();
+                            // 만약 보고 있던 캘린더가 이 그룹 관련이라면 내 걸로 복귀
+                            loadSchedules(currentUser.id, '나');
+                        } else {
+                            // 추방이면 목록만 갱신 
+                            // 여기서 방장 ID를 다시 알기 어려우므로 간단히 UI 리로드 혹은 currentUser 이용
+                            loadGroupMembers(groupId, currentUser.id); 
+                        }
+                    } else {
+                        alert('실패: ' + data.message);
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert('오류가 발생했습니다.');
+                }
+            };
+
+            // [그룹] 멤버 목록 로드
+            const loadGroupMembers = async (groupId, groupCreatorId) => {
+                try {
+                    const response = await fetch(`/api/groups/${groupId}/members`);
+                    const members = await response.json();
+                    modalMemberList.innerHTML = ''; 
+                    
+                    members.forEach(member => {
+                        const li = document.createElement('li');
+                        li.className = 'flex justify-between items-center text-sm p-2 border-b border-gray-100 cursor-pointer hover:bg-gray-100 transition';
+                        
+                        // 1. 왼쪽: 이름 및 정보
+                        const leftDiv = document.createElement('div');
+                        leftDiv.className = 'flex items-center';
+                        
+                        let nameHTML = `<span class="font-medium text-gray-800">${member.name}</span> <span class="text-xs text-gray-400 ml-1">(${member.email})</span>`;
+                        
+                        // 나 표시
+                        if (currentUser.id === member.id) {
+                            nameHTML += `<span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1 rounded ml-1">나</span>`;
+                        }
+                        // 방장 표시
+                        if (member.id === groupCreatorId) {
+                            nameHTML += `<span class="text-[10px] ml-1">👑</span>`;
+                        }
+                        leftDiv.innerHTML = nameHTML;
+
+                        // 클릭 시 캘린더 전환 (이벤트 버블링 방지 필요)
+                        leftDiv.addEventListener('click', (e) => {
+                            e.stopPropagation(); // 버튼 클릭과 겹치지 않게
+                            loadSchedules(member.id, member.name); 
+                            groupModal.classList.add('hidden');
+                            alert(`${member.name}님의 캘린더로 전환되었습니다.`);
+                        });
+
+
+                        // 2. 오른쪽: 관리 버튼 (탈퇴/추방)
+                        const btnDiv = document.createElement('div');
+                        
+                        // A. 내가 방장이고, 상대방이 방장이 아닐 때 -> [추방]
+                        if (currentUser.id === groupCreatorId && member.id !== groupCreatorId) {
+                            const kickBtn = document.createElement('button');
+                            kickBtn.className = 'text-[10px] bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200 ml-2';
+                            kickBtn.innerText = '추방';
+                            kickBtn.onclick = (e) => {
+                                e.stopPropagation();
+                                removeMember(groupId, member.id, 'kick');
+                            };
+                            btnDiv.appendChild(kickBtn);
+                        }
+
+                        // B. 내가 이 멤버이고, 내가 방장이 아닐 때 -> [나가기]
+                        if (currentUser.id === member.id && currentUser.id !== groupCreatorId) {
+                            const leaveBtn = document.createElement('button');
+                            leaveBtn.className = 'text-[10px] bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 ml-2';
+                            leaveBtn.innerText = '나가기';
+                            leaveBtn.onclick = (e) => {
+                                e.stopPropagation();
+                                removeMember(groupId, member.id, 'leave');
+                            };
+                            btnDiv.appendChild(leaveBtn);
+                        }
+
+                        li.appendChild(leftDiv);
+                        li.appendChild(btnDiv);
+                        modalMemberList.appendChild(li); 
+                    });
+                } catch (error) { console.error('멤버 로드 실패:', error); }
+            };
+
+            // [그룹] 신청/승인 (생략된 부분 복구)
+            const loadJoinRequests = async (groupId) => {
+                try {
+                    const response = await fetch(`/api/groups/${groupId}/requests`);
+                    const requests = await response.json();
+                    joinRequestList.innerHTML = '';
+                    if (requests.length === 0) {
+                        joinRequestList.innerHTML = '<li class="text-xs text-gray-400 text-center py-2">대기 중인 신청이 없습니다.</li>';
+                        return;
+                    }
+                    requests.forEach(req => {
+                        const li = document.createElement('li');
+                        li.className = 'flex justify-between items-center bg-white p-2 border rounded shadow-sm';
+                        li.innerHTML = `<div class="text-xs"><span class="font-bold text-gray-800">${req.name}</span> <span class="text-gray-500">(${req.email})</span></div><div class="flex gap-1"><button class="btn-approve bg-green-500 text-white text-[10px] px-2 py-1 rounded hover:bg-green-600">승인</button><button class="btn-reject bg-red-500 text-white text-[10px] px-2 py-1 rounded hover:bg-red-600">거절</button></div>`;
+                        li.querySelector('.btn-approve').addEventListener('click', () => handleJoinRequest(groupId, req.id, 'approve'));
+                        li.querySelector('.btn-reject').addEventListener('click', () => handleJoinRequest(groupId, req.id, 'reject'));
+                        joinRequestList.appendChild(li);
+                    });
+                } catch (error) { console.error('신청 로드 실패:', error); }
+            };
+
+            const handleJoinRequest = async (groupId, requestId, action) => {
+                if (!confirm(action === 'approve' ? '승인하시겠습니까?' : '거절하시겠습니까?')) return;
+                try {
+                    const response = await fetch(`/api/groups/${groupId}/requests/${requestId}/handle`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action })
+                    });
+                    const data = await response.json();
+                    if (response.ok) { alert(data.message); loadJoinRequests(groupId); loadGroupMembers(groupId); } 
+                    else { alert('오류: ' + data.message); }
+                } catch (error) { console.error(error); }
+            };
+
+            // [그룹] 검색
+            const searchGroups = async () => {
+                const keyword = searchInput.value.trim();
+                try {
+                    const response = await fetch(`/api/groups/search/all?keyword=${encodeURIComponent(keyword)}`);
+                    const groups = await response.json();
+                    searchResultList.innerHTML = '';
+                    if (groups.length === 0) {
+                        searchResultList.innerHTML = '<li class="text-center text-gray-500 mt-4">검색 결과가 없습니다.</li>';
+                        return;
+                    }
+                    groups.forEach(group => {
+                        const li = document.createElement('li');
+                        li.className = 'bg-white border rounded p-3 shadow-sm hover:shadow-md transition';
+                        li.innerHTML = `<div class="flex justify-between items-start"><div><div class="font-bold text-indigo-600">${group.name}</div><div class="text-xs text-gray-500 mt-1">${group.description || '설명 없음'}</div><div class="text-xs text-gray-400 mt-2">방장: ${group.creator_name} | 멤버: ${group.member_count}명</div></div><button class="btn-join-req bg-indigo-100 text-indigo-700 text-xs px-3 py-1.5 rounded hover:bg-indigo-200 font-bold">가입 신청</button></div>`;
+                        li.querySelector('.btn-join-req').addEventListener('click', async () => {
+                            if (!currentUser) return alert('로그인 필요');
+                            if (confirm(`'${group.name}' 그룹에 가입 신청하시겠습니까?`)) {
+                                try {
+                                    const res = await fetch(`/api/groups/${group.id}/join`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ user_id: currentUser.id })
+                                    });
+                                    const data = await res.json();
+                                    alert(data.message);
+                                } catch (err) { console.error(err); alert('신청 실패'); }
+                            }
+                        });
+                        searchResultList.appendChild(li);
+                    });
+                } catch (error) { console.error('검색 실패:', error); }
+            };
+
+
+            // --- 이벤트 리스너 ---
+
+            // Auth
+            showSignupBtn.addEventListener('click', () => { loginPage.classList.add('hidden'); signupPage.classList.remove('hidden'); });
+            showLoginBtn.addEventListener('click', () => { signupPage.classList.add('hidden'); loginPage.classList.remove('hidden'); });
+            
             loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault(); 
-                
                 const email = document.getElementById('login-email').value;
                 const password = document.getElementById('login-password').value;
-                
                 try {
                     const response = await fetch('/api/auth/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email, password }),
                     });
-
                     const data = await response.json();
-
                     if (response.ok) {
-                        // 로그인 성공 처리
                         alert('환영합니다, ' + data.user.name + '님!');
-
-                        // 로그인한 유저 정보 저장
                         currentUser = data.user;
-
                         renderCalendar();
-
-                        // [일정 조율] timetable 불러오기
-                        renderTimetableUI();
-                        loadMyTimetable();
+                        renderTimetableUI(); 
+                        await loadGroups(); // ★ 그룹 로드하고 첫 번째 그룹 자동 선택
                         
-                        // 헤더에 사용자 이름 표시 (UI 업데이트)
-                        const headerUserInfo = document.querySelector('header span');
-                        if(headerUserInfo) headerUserInfo.innerText = `${data.user.name}님 로그인됨`;
-
-                        // 페이지 전환
+                        document.querySelector('header span').innerText = `${data.user.name}님 로그인됨`;
                         loginPage.classList.add('hidden');
                         mainPage.classList.remove('hidden');
-                        
-                        // (선택사항) 로그인 정보 유지용 - 나중에 구현
-                        // localStorage.setItem('user', JSON.stringify(data.user)); 
-                    } else {
-                        // 로그인 실패 처리
-                        alert('실패: ' + data.message);
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('서버 통신 중 오류가 발생했습니다.');
-                }
+                    } else { alert('실패: ' + data.message); }
+                } catch (error) { console.error('Error:', error); }
             });
 
-            // '회원가입' 폼 제출 시 로직 (서버 통신 추가)
             signupForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-
                 const name = document.getElementById('signup-name').value;
                 const email = document.getElementById('signup-email').value;
                 const password = document.getElementById('signup-password').value;
-
                 try {
                     const response = await fetch('/api/auth/signup', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ name, email, password }),
                     });
-
                     const data = await response.json();
-
                     if (response.ok) {
-                        alert('성공: ' + data.message); // 성공 메시지
+                        alert('성공: ' + data.message);
                         signupPage.classList.add('hidden');
                         loginPage.classList.remove('hidden');
-                    } else {
-                        alert('실패: ' + data.message); // 실패 메시지 (중복 등)
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('서버 통신 중 오류가 발생했습니다.');
-                }
+                    } else { alert('실패: ' + data.message); }
+                } catch (error) { console.error(error); }
             });
 
-            // '로그아웃' 버튼 클릭 시
             logoutBtn.addEventListener('click', () => {
-                // 1. 사용자 의사 확인
-                if (!confirm('정말 로그아웃 하시겠습니까?')) {
-                    return; 
-                }
-
-                // 2. 화면 전환 (메인 -> 로그인)
-                mainPage.classList.add('hidden');
-                loginPage.classList.remove('hidden');
-
-                // 3. 입력 필드 초기화 (보안 및 UX: 다음 사람을 위해 비워둠)
-                document.getElementById('login-email').value = '';
-                document.getElementById('login-password').value = '';
-
-                currentUser = null;
-
-                // 4. (선택사항) 로그인 정보 삭제 (나중에 토큰 등을 쓴다면 여기서 삭제)
-                // localStorage.removeItem('user'); 
-
-                alert('로그아웃 되었습니다.');
+                if (!confirm('정말 로그아웃 하시겠습니까?')) return;
+                window.location.reload();
             });
 
-            // --- 메인 페이지 기능 (나중에 추가) ---
-            
-            // 캘린더 생성 JS 로직    
-            let currentDate = new Date(); // 현재 날짜 기준
-
-            const calendarGrid = document.getElementById('calendar-grid');
-            const monthYearTitle = document.getElementById('current-month-year');
-            const prevBtn = document.getElementById('prev-month');
-            const nextBtn = document.getElementById('next-month');
-
-            // 달력 그리기 함수
-            const renderCalendar = async () => {
-                calendarGrid.innerHTML = ''; // 기존 내용 초기화
-                const year = currentDate.getFullYear();
-                const month = currentDate.getMonth(); // 0(1월) ~ 11(12월)
-
-                // 제목 업데이트 (예: 2025년 11월)
-                monthYearTitle.innerText = `${year}년 ${month + 1}월`;
-
-                // 이번 달 1일이 무슨 요일인지 (0:일, 1:월 ... 6:토)
-                const firstDayIndex = new Date(year, month, 1).getDay();
-                                
-                // 이번 달 마지막 날짜가 며칠인지 (28, 30, 31?)
-                const lastDay = new Date(year, month + 1, 0).getDate();
-
-                // 1. 빈 칸 채우기 (1일 전까지)
-                for (let i = 0; i < firstDayIndex; i++) {
-                    const emptyDiv = document.createElement('div');
-                    emptyDiv.className = 'p-2 bg-gray-50 rounded-md'; // 스타일 유지
-                    calendarGrid.appendChild(emptyDiv);
-                }
-            
-                // 2. 날짜 채우기 (1일부터 말일까지)
-                for (let i = 1; i <= lastDay; i++) {
-                    const dateDiv = document.createElement('div');
-                    
-                    // "2025-11-05" 형태로 만듦 (월/일이 한 자리수면 앞에 0 붙이기)
-                    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-                    dateDiv.dataset.date = dateString;
-
-                    dateDiv.className = 'p-2 border border-gray-200 rounded-md bg-white hover:bg-indigo-50 cursor-pointer h-24 transition flex flex-col justify-between';
-                    
-                    // 날짜 숫자와 점이 들어갈 공간 분리
-                    dateDiv.innerHTML = `
-                        <span class="font-semibold text-gray-700">${i}</span>
-                        <div id="dots-${dateString}" class="flex gap-1 justify-center text-xs text-red-500"></div> 
-                    `;
-
-                    // 날짜 클릭 이벤트 (학습 기록용)
-                    dateDiv.addEventListener('click', () => {
-                        document.getElementById('log-date').value = dateString;
-                        
-                        // 1. 일단 입력폼은 초기화 (새 글 쓸 준비)
-                        resetFormToCreateMode();
-
-                        // 2. 리스트가 있으면 보여주기
-                        renderScheduleList(dateString);
-                    });
-
-                    calendarGrid.appendChild(dateDiv);
-                } // 날짜 반복문 종료
-
-                // 공휴일 호출
-                loadHolidays(year);
-
-                if (currentUser) {
-                    await loadSchedules(); 
-                }
-            };
-
-            // [공휴일 로드 함수]
-            const loadHolidays = async (year) => {
-                try {
-                    const response = await fetch(`/api/holidays?year=${year}&country=KR`);
-                    if (response.ok) {
-                        const holidays = await response.json();
-                        holidays.forEach(holiday => {
-                            // 날짜가 일치하는 칸 찾기
-                            const dateDiv = document.querySelector(`div[data-date="${holiday.date}"]`);
-                            if (dateDiv) {
-                                // 1. 날짜 숫자 색상 변경 (빨강)
-                                const daySpan = dateDiv.querySelector('span');
-                                if(daySpan) {
-                                    daySpan.classList.remove('text-gray-700');
-                                    daySpan.classList.add('text-red-500');
-                                }
-                                // 2. 공휴일 이름 표시
-                                if(!dateDiv.querySelector('.holiday-name')) {
-                                    const holidayNameDiv = document.createElement('div');
-                                    holidayNameDiv.className = 'holiday-name text-xs text-red-500 mt-1 truncate font-bold';
-                                    holidayNameDiv.innerText = holiday.name;
-                                    dateDiv.insertBefore(holidayNameDiv, dateDiv.lastElementChild);
-                                }
-                            }
-                        });
-                    }
-                } catch (error) {
-                    console.error('공휴일 로드 실패:', error);
-                }
-            };
-
-            // [리스트 그리기 헬퍼 함수]
-            const renderScheduleList = (dateString) => {
-                const listContainer = document.getElementById('schedule-list-container');
-                const listElement = document.getElementById('schedule-list');
-                const items = dailySchedules[dateString] || [];
-
-                // 데이터가 없으면 리스트 숨김
-                if (items.length === 0) {
-                    listContainer.classList.add('hidden');
-                    return;
-                }
-
-                // 데이터가 있으면 리스트 표시 및 생성
-                listContainer.classList.remove('hidden');
-                listElement.innerHTML = ''; // 기존 목록 비우기
-
-                items.forEach(item => {
-                    const li = document.createElement('li');
-                    li.className = 'p-2 bg-white border border-gray-200 rounded hover:bg-indigo-50 cursor-pointer text-sm truncate';
-                    li.innerText = item.content; // 내용 일부 보여주기
-                    
-                    // 리스트 아이템 클릭 시 -> 수정 모드로 진입
-                    li.addEventListener('click', () => {
-                        document.getElementById('log-content').value = item.content;
-                        selectedScheduleId = item.id;
-                        
-                        document.getElementById('save-log').innerText = '수정';
-                        document.getElementById('delete-log').classList.remove('hidden');
-                        document.getElementById('btn-new-entry').classList.remove('hidden'); // '새 글 쓰기' 버튼 보이기
-                    });
-
-                    listElement.appendChild(li);
-                });
-            };
-
-            document.getElementById('btn-new-entry').addEventListener('click', () => {
-                resetFormToCreateMode();
+            // 캘린더 복귀
+            document.getElementById('current-month-year').addEventListener('click', () => {
+                if(currentUser) { loadSchedules(currentUser.id, '나'); alert('나의 캘린더로 돌아왔습니다.'); }
+            });
+            backBtn.addEventListener('click', () => {
+                if(currentUser) { loadSchedules(currentUser.id, '나'); alert('나의 캘린더로 돌아왔습니다.'); }
             });
 
-            // 입력폼 초기화 헬퍼 함수 (새 글 작성 모드로 복귀)
-            const resetFormToCreateMode = () => {
-                document.getElementById('log-content').value = '';
-                selectedScheduleId = null;
-                document.getElementById('save-log').innerText = '기록 저장';
-                document.getElementById('delete-log').classList.add('hidden');
-                document.getElementById('btn-new-entry').classList.add('hidden');
-            };
-
-            // 2. 일정 불러오기 함수
-            const loadSchedules = async () => {
-                if (!currentUser) return;
-                // 초기화
-                dailySchedules = {}; 
-                // 기존 점들 지우기
-                document.querySelectorAll('[id^="dots-"]').forEach(el => el.innerHTML = '');
-
-                try {
-                    const response = await fetch(`/api/schedules?user_id=${currentUser.id}`);
-                    const schedules = await response.json();
-
-                    schedules.forEach(schedule => {
-                        // 배열로 저장 (없으면 생성 후 push)
-                        if (!dailySchedules[schedule.date]) {
-                            dailySchedules[schedule.date] = [];
-                        }
-                        dailySchedules[schedule.date].push(schedule);
-
-                        // 2. 달력에 점 찍기
-                        const dotContainer = document.getElementById(`dots-${schedule.date}`);
-                        if (dotContainer) {
-                            const dot = document.createElement('div');
-                            dot.className = 'w-2 h-2 bg-red-500 rounded-full';
-                            dotContainer.appendChild(dot);
-                        }
-                    });
-                    // 만약 현재 보고 있는 날짜가 있다면 리스트도 갱신해줘야 함 (저장 직후를 위해)
-                    const currentDateVal = document.getElementById('log-date').value;
-                    if(currentDateVal && dailySchedules[currentDateVal]) {
-                        renderScheduleList(currentDateVal);
-                    }
-
-                } catch (error) {
-                    console.error('일정 로드 실패:', error);
-                }
-            };
-
-            // 초기 렌더링
-            renderCalendar();
-
-            // 버튼 이벤트 연결
-            prevBtn.addEventListener('click', () => {
-                currentDate.setMonth(currentDate.getMonth() - 1);
-                renderCalendar();
-            });
-
-            nextBtn.addEventListener('click', () => {
-                currentDate.setMonth(currentDate.getMonth() + 1);
-                renderCalendar();
-            });
+            // 그룹 생성/검색/모달
+            btnToggleGroup.addEventListener('click', () => { groupFormContainer.classList.remove('hidden'); document.getElementById('new-group-name').focus(); });
+            btnCancelGroup.addEventListener('click', () => { groupFormContainer.classList.add('hidden'); });
             
-            
-            // 일정 저장 로직
-            const saveLogBtn = document.getElementById('save-log');
-
-            // '기록 저장(또는 수정)' 버튼 클릭 시
-            saveLogBtn.addEventListener('click', async () => {
+            btnCreateGroup.addEventListener('click', async () => {
                 if (!currentUser) return alert('로그인이 필요합니다.');
-                
-                const date = document.getElementById('log-date').value;
-                const content = document.getElementById('log-content').value;
-                if (!date || !content.trim()) return alert('날짜와 내용을 입력하세요.');
-
-                // 수정(PUT)인지 저장(POST)인지 결정
-                const method = selectedScheduleId ? 'PUT' : 'POST';
-                const url = selectedScheduleId 
-                    ? `/api/schedules/${selectedScheduleId}` 
-                    : '/api/schedules';
-
+                const name = document.getElementById('new-group-name').value;
+                const desc = document.getElementById('new-group-desc').value;
+                if (!name.trim()) return alert('그룹 이름을 입력해주세요.');
                 try {
-                    const response = await fetch(url, {
-                        method: method,
+                    const response = await fetch('/api/groups', {
+                        method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            user_id: currentUser.id,
-                            date: date,
-                            content: content
-                        }),
+                        body: JSON.stringify({ user_id: currentUser.id, name, description: desc }),
                     });
-
+                    const data = await response.json();
                     if (response.ok) {
-                        alert(selectedScheduleId ? '수정되었습니다!' : '저장되었습니다!');
-                        document.getElementById('log-content').value = '';
-                        document.getElementById('delete-log').classList.add('hidden'); // 버튼 초기화
-                        saveLogBtn.innerText = '기록 저장';
-                        selectedScheduleId = null;
-                        
-                        loadSchedules(); // 화면 갱신
-                    } else {
-                        const data = await response.json();
-                        alert('실패: ' + data.message);
-                    }
-                } catch (error) {
-                    console.error(error);
-                }
-            });
+                        alert(`'${data.name}' 그룹이 생성되었습니다.`);
+                        groupFormContainer.classList.add('hidden');
+                        loadGroups();
+                    } else { alert('실패: ' + data.message); }
+                } catch (error) { console.error(error); }
+            }); 
+            
+            btnOpenSearch.addEventListener('click', () => { searchModal.classList.remove('hidden'); searchInput.value = ''; searchResultList.innerHTML = ''; searchGroups(); });
+            btnCloseSearch.addEventListener('click', () => searchModal.classList.add('hidden'));
+            btnSearch.addEventListener('click', searchGroups);
+            searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchGroups(); });
 
-            // '삭제' 버튼 클릭 시
-            document.getElementById('delete-log').addEventListener('click', async () => {
-                if (!selectedScheduleId || !confirm('정말 삭제하시겠습니까?')) return;
-
+            btnCloseModal.addEventListener('click', () => { groupModal.classList.add('hidden'); });
+            btnInviteMember.addEventListener('click', async () => {
+                const email = document.getElementById('invite-email').value;
                 try {
-                    const response = await fetch(`/api/schedules/${selectedScheduleId}`, {
-                        method: 'DELETE',
+                    const response = await fetch(`/api/groups/${currentGroupId}/members`, {
+                        method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user_id: currentUser.id }) // 본인 확인용
+                        body: JSON.stringify({ email })
                     });
-
-                    if (response.ok) {
-                        alert('삭제되었습니다.');
-                        // 화면 초기화
-                        document.getElementById('log-content').value = '';
-                        document.getElementById('delete-log').classList.add('hidden');
-                        document.getElementById('save-log').innerText = '기록 저장';
-                        selectedScheduleId = null;
-
-                        loadSchedules(); // 빨간 점 지우기 위해 새로고침
-                    } else {
-                        alert('삭제 실패');
-                    }
-                } catch (error) {
-                    console.error(error);
-                }
-            });
-            
-            // TODO: '스터디 그룹' 기능 로직 추가
-
-            // [일정 조율] 버튼 이벤트
-            const btnMy = document.getElementById('btn-my-timetable');
-            const btnGroup = document.getElementById('btn-group-timetable');
-
-            btnMy.addEventListener('click', () => {
-                timetableMode = 'my';
-                loadMyTimetable();
+                    const data = await response.json();
+                    if (response.ok) { alert('초대되었습니다!'); document.getElementById('invite-email').value = ''; loadGroupMembers(currentGroupId); }
+                    else { alert('실패: ' + data.message); }
+                } catch (error) { console.error(error); }
             });
 
-            btnGroup.addEventListener('click', () => {
-                timetableMode = 'group';
-                loadGroupTimetable();
-            });
-            
-            // --- [추가된 로직] 설정 모달 및 계정 관리 ---
+            if (btnDeleteGroup) {
+                btnDeleteGroup.addEventListener('click', async () => {
+                    if (!currentGroupId || !confirm('정말 삭제하시겠습니까?')) return;
+                    try {
+                        const response = await fetch(`/api/groups/${currentGroupId}`, {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ user_id: currentUser.id })
+                        });
+                        if (response.ok) { alert('삭제되었습니다.'); groupModal.classList.add('hidden'); currentGroupId = null; loadGroups(); loadSchedules(currentUser.id, '나'); }
+                        else { alert('삭제 실패'); }
+                    } catch (error) { console.error(error); }
+                });
+            }
 
-            const settingsModal = document.getElementById('settings-modal');
-            const settingsBtn = document.getElementById('settings-button');
-            const closeSettingsBtn = document.getElementById('close-settings');
+            // 시간표 버튼
+            btnMyTimetable.addEventListener('click', () => { timetableMode = 'my'; loadMyTimetable(); });
+            btnGroupTimetable.addEventListener('click', () => { timetableMode = 'group'; loadGroupTimetable(); });
 
-            // 1. 모달 열기/닫기
+            // 설정 모달
             settingsBtn.addEventListener('click', () => {
                 settingsModal.classList.remove('hidden');
-                // 입력 필드 초기화
                 document.getElementById('current-pw').value = '';
                 document.getElementById('new-pw').value = '';
                 document.getElementById('delete-confirm-pw').value = '';
             });
+            closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
 
-            closeSettingsBtn.addEventListener('click', () => {
-                settingsModal.classList.add('hidden');
-            });
-
-            // 2. 비밀번호 변경 요청
             document.getElementById('btn-change-pw').addEventListener('click', async () => {
                 const currentPassword = document.getElementById('current-pw').value;
                 const newPassword = document.getElementById('new-pw').value;
-
-                if(!currentPassword || !newPassword) return alert('비밀번호를 모두 입력해주세요.');
-
                 try {
                     const response = await fetch('/api/user/password', {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            userId: currentUser.id,
-                            currentPassword,
-                            newPassword
-                        })
+                        body: JSON.stringify({ userId: currentUser.id, currentPassword, newPassword })
                     });
-                    const data = await response.json();
-                    
-                    if(response.ok) {
-                        alert('비밀번호가 변경되었습니다.');
-                        settingsModal.classList.add('hidden');
-                    } else {
-                        alert('실패: ' + data.message);
-                    }
-                } catch (e) {
-                    console.error(e);
-                    alert('오류가 발생했습니다.');
-                }
+                    if(response.ok) { alert('변경되었습니다.'); settingsModal.classList.add('hidden'); }
+                    else { alert('실패: ' + (await response.json()).message); }
+                } catch (e) { console.error(e); }
             });
 
-            // 3. 계정 삭제 요청
             document.getElementById('btn-delete-account').addEventListener('click', async () => {
                 const password = document.getElementById('delete-confirm-pw').value;
-                if(!password) return alert('삭제를 확인하기 위해 비밀번호를 입력해주세요.');
-
-                if(!confirm('정말로 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
-
+                if(!password || !confirm('정말 삭제하시겠습니까?')) return;
                 try {
                     const response = await fetch('/api/user/account', {
                         method: 'DELETE',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            userId: currentUser.id,
-                            password
-                        })
+                        body: JSON.stringify({ userId: currentUser.id, password })
                     });
-                    const data = await response.json();
-
-                    if(response.ok) {
-                        alert('계정이 삭제되었습니다.');
-                        // 로그아웃 처리와 동일하게 UI 리셋
-                        window.location.reload(); // 가장 깔끔하게 초기화
-                    } else {
-                        alert('실패: ' + data.message);
-                    }
-                } catch (e) {
-                    console.error(e);
-                    alert('오류가 발생했습니다.');
-                }
-            });
-        });
-
-        // [일정 조율] 요일/시간 블록 정의
-        const DAYS = [
-            { label: '일', value: 0 },
-            { label: '월', value: 1 },
-            { label: '화', value: 2 },
-            { label: '수', value: 3 },
-            { label: '목', value: 4 },
-            { label: '금', value: 5 },
-            { label: '토', value: 6 },
-        ];
-
-        const BLOCKS = Array.from({ length: 14 }, (_, i) => {
-            const hour = 10 + i;  // 10~23
-            return {
-                label: `${hour.toString().padStart(2, '0')}:00`,
-                value: i + 1
-            };
-        });
-
-        // TODO: 그룹 기능 추가되면 변경
-        let currentGroupId = 1; // 임시 값
-        let timetableMode = 'my'; // 'my' or 'group'
-
-        let isDragging = false;
-        let dragMode = "paint"; // "paint" or "erase"
-
-        // 마우스 떼면 드래그 종료
-        document.addEventListener("mouseup", () => {
-            isDragging = false;
-        });
-
-        function renderTimetableUI() {
-            const container = document.getElementById('timetable');
-            if (!container) return;
-            container.innerHTML = '';
-
-            const table = document.createElement('table');
-            table.className = 'min-w-full border-collapse select-none';
-
-            const thead = document.createElement('thead');
-            const row = document.createElement('tr');
-
-            const blank = document.createElement('th');
-            blank.className = 'p-2';
-            row.appendChild(blank);
-
-            DAYS.forEach(d => {
-                const th = document.createElement('th');
-                th.textContent = d.label;
-                th.className = 'p-2 text-center font-medium text-gray-700';
-                row.appendChild(th);
+                    if(response.ok) { alert('삭제되었습니다.'); window.location.reload(); }
+                    else { alert('실패: ' + (await response.json()).message); }
+                } catch (e) { console.error(e); }
             });
 
-            thead.appendChild(row);
-            table.appendChild(thead);
+            // 일정 CRUD
+            newEntryBtn.addEventListener('click', () => {
+                document.getElementById('log-content').value = '';
+                selectedScheduleId = null;
+                saveLogBtn.innerText = '기록 저장';
+                deleteLogBtn.classList.add('hidden');
+                newEntryBtn.classList.add('hidden');
+            });
+            saveLogBtn.addEventListener('click', async () => {
+                if (!currentUser) return alert('로그인 필요');
+                const date = document.getElementById('log-date').value;
+                const content = document.getElementById('log-content').value;
+                const method = selectedScheduleId ? 'PUT' : 'POST';
+                const url = selectedScheduleId ? `/api/schedules/${selectedScheduleId}` : '/api/schedules';
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: currentUser.id, date, content }),
+                    });
+                    if (response.ok) { alert('저장되었습니다.'); loadSchedules(); }
+                } catch(e) {}
+            });
+            deleteLogBtn.addEventListener('click', async () => {
+                if(!selectedScheduleId || !confirm('삭제하시겠습니까?')) return;
+                try {
+                    const response = await fetch(`/api/schedules/${selectedScheduleId}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: currentUser.id }) 
+                    });
+                    if (response.ok) { alert('삭제됨'); loadSchedules(); }
+                } catch(e) {}
+            });
 
-            const tbody = document.createElement('tbody');
-
-            BLOCKS.forEach(block => {
-                const tr = document.createElement('tr');
-
-                const timeTd = document.createElement('td');
-                timeTd.textContent = block.label;
-                timeTd.className = 'text-gray-600 text-sm w-10 text-right pr-1 select-none';
-                tr.appendChild(timeTd);
-
-                DAYS.forEach(day => {
-                    const td = document.createElement('td');
-                    td.className = 'border h-10 cursor-pointer bg-white hover:bg-blue-50 transition';
-                    td.dataset.day = day.value;
-                    td.dataset.block = block.value;
-
-                    // 클릭 & 드래그 시작
-                    td.addEventListener('mousedown', async (e) => {
-                        if (e.button !== 0) return;
-                        if (!currentUser) return alert("로그인 후 이용하세요.");
-                        if (!currentGroupId) return alert("그룹을 먼저 선택하세요.");
-
-                        isDragging = true;
-
-                        const alreadyOn = td.classList.contains('bg-blue-100');
-                        dragMode = alreadyOn ? 'erase' : 'paint';
-
-                        if (dragMode === 'paint') {
-                            td.classList.add('bg-blue-100');
-                        } else {
-                            td.classList.remove('bg-blue-100');
+            // 캘린더 초기 렌더링
+            let currentDate = new Date();
+            const renderCalendar = async () => {
+                calendarGrid.innerHTML = '';
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                monthYearTitle.innerText = `${year}년 ${month + 1}월`;
+                const firstDayIndex = new Date(year, month, 1).getDay();
+                const lastDay = new Date(year, month + 1, 0).getDate();
+                for (let i = 0; i < firstDayIndex; i++) calendarGrid.appendChild(document.createElement('div'));
+                for (let i = 1; i <= lastDay; i++) {
+                    const dateDiv = document.createElement('div');
+                    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                    dateDiv.dataset.date = dateString;
+                    dateDiv.className = 'p-2 border border-gray-200 rounded-md bg-white hover:bg-indigo-50 cursor-pointer h-24 transition flex flex-col justify-between';
+                    dateDiv.innerHTML = `<span class="font-semibold text-gray-700">${i}</span><div id="dots-${dateString}" class="flex gap-1 justify-center text-xs text-red-500"></div>`;
+                    dateDiv.addEventListener('click', () => {
+                        document.getElementById('log-date').value = dateString;
+                        const listContainer = document.getElementById('schedule-list-container');
+                        const listElement = document.getElementById('schedule-list');
+                        const items = dailySchedules[dateString] || [];
+                        if (items.length === 0) listContainer.classList.add('hidden');
+                        else {
+                            listContainer.classList.remove('hidden');
+                            listElement.innerHTML = '';
+                            items.forEach(item => {
+                                const li = document.createElement('li');
+                                li.className = 'p-2 bg-white border border-gray-200 rounded hover:bg-indigo-50 cursor-pointer text-sm truncate';
+                                li.innerText = item.content;
+                                li.addEventListener('click', () => {
+                                    document.getElementById('log-content').value = item.content;
+                                    selectedScheduleId = item.id;
+                                    saveLogBtn.innerText = '수정';
+                                    deleteLogBtn.classList.remove('hidden');
+                                    newEntryBtn.classList.remove('hidden');
+                                });
+                                listElement.appendChild(li);
+                            });
                         }
-
-                        await fetch('/api/timetable', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                group_id: currentGroupId,
-                                user_id: currentUser.id,
-                                day_of_week: day.value,
-                                block: block.value,
-                                isOn: dragMode === "paint"
-                            })
+                    });
+                    calendarGrid.appendChild(dateDiv);
+                }
+                try {
+                    const res = await fetch(`/api/holidays?year=${year}&country=KR`);
+                    if (res.ok) {
+                        (await res.json()).forEach(h => {
+                            const d = document.querySelector(`div[data-date="${h.date}"]`);
+                            if(d) {
+                                d.querySelector('span').classList.add('text-red-500');
+                                if(!d.querySelector('.holiday-name')) d.innerHTML += `<div class="holiday-name text-xs text-red-500 mt-1 truncate font-bold">${h.name}</div>`;
+                            }
                         });
+                    }
+                } catch(e) {}
+                if (currentUser) await loadSchedules(); 
+            };
+            
+            prevBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
+            nextBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
 
-                        e.preventDefault();
-                    });
-
-                    // 드래그 중
-                    td.addEventListener('mouseenter', async () => {
-                        if (!isDragging) return;
-                        if (!currentUser) return;
-                        if (!currentGroupId) return;
-
-                        if (dragMode === 'paint') {
-                            if (!td.classList.contains('bg-blue-100')) {
-                                td.classList.add('bg-blue-100');
-
-                                await fetch('/api/timetable', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                        group_id: currentGroupId,
-                                        user_id: currentUser.id,
-                                        day_of_week: day.value,
-                                        block: block.value,
-                                        isOn: true
-                                    })
-                                });
-                            }
-                        } else {
-                            if (td.classList.contains('bg-blue-100')) {
-                                td.classList.remove('bg-blue-100');
-
-                                await fetch('/api/timetable', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                        group_id: currentGroupId,
-                                        user_id: currentUser.id,
-                                        day_of_week: day.value,
-                                        block: block.value,
-                                        isOn: false
-                                    })
-                                });
-                            }
-                        }
-                    });
-
-                    tr.appendChild(td);
-                });
-
-                tbody.appendChild(tr);
-            });
-
-            table.appendChild(tbody);
-            container.appendChild(table);
-        }
-
-        async function loadMyTimetable() {
-            if (!currentUser || !currentGroupId) return;
-
-            // 전체 칸 색 제거
-             document.querySelectorAll('#timetable td[data-day]').forEach(td => {
-                td.classList.remove('bg-blue-100','bg-blue-200','bg-blue-300');
-            });
-
-            // DB에서 그룹 시간표 로드
-            const res = await fetch(`/api/timetable?group_id=${currentGroupId}&user_id=${currentUser.id}`);
-            const data = await res.json();
-
-            data.forEach(slot => {
-                const selector = `[data-day="${slot.day_of_week}"][data-block="${slot.block}"]`;
-                const td = document.querySelector(selector);
-                if (td) td.classList.add('bg-blue-100');
-            });
-        }
-
-        async function loadGroupTimetable() {
-            if (!currentGroupId) return;
-
-            // 전부 초기화
-            document.querySelectorAll('#timetable td[data-day]').forEach(td => {
-                td.classList.remove('bg-blue-100','bg-blue-200','bg-blue-300');
-            });
-
-            const res = await fetch(`/api/timetable?group_id=${currentGroupId}`);
-            const data = await res.json();
-
-            data.forEach(slot => {
-                const selector = `[data-day="${slot.day_of_week}"][data-block="${slot.block}"]`;
-                const td = document.querySelector(selector);
-                if (!td) return;
-
-                // 겹치는 인원 수에 따라 색 진하게. 일단은 3명 기준으로
-                if (slot.count >= 3) {
-                    td.classList.add('bg-blue-300');
-                } else if (slot.count === 2) {
-                    td.classList.add('bg-blue-200');
-                } else {
-                    td.classList.add('bg-blue-100');
-                }
-            });
-        }
-
-
+            renderCalendar();
+        });
     </script>
 </body>
 </html>
