@@ -25,33 +25,55 @@ router.post('/', async (req, res) => {
 });
 
 // --- 일정 조회 API (GET /api/schedules?user_id=1) ---
+// --- 일정 조회 API (수정됨: 개인 또는 그룹 일정 조회) ---
 router.get('/', async (req, res) => {
-    const { user_id } = req.query; // 주소창 물음표 뒤의 user_id를 가져옴
-
-    if (!user_id) {
-        return res.status(400).json({ message: '로그인이 필요합니다.' });
-    }
+    // 프론트엔드에서 보낸 user_id 또는 group_id를 받습니다.
+    const { user_id, group_id } = req.query;
 
     try {
-        // 해당 유저의 모든 일정을 가져옴
-        const query = 'SELECT * FROM schedules WHERE user_id = ?';
-        const [rows] = await db.query(query, [user_id]);
+        let query;
+        let params = [];
 
-        // 날짜 포맷 변환 (로컬 시간 기준 유지)
-        const schedules = rows.map(row => {
-            const d = new Date(row.date);
-            // UTC 변환 없이, 현재 시스템(한국) 시간 기준으로 연/월/일 추출
-            const year = d.getFullYear();
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
+        // 상황 1: 그룹 버튼을 눌러서 'group_id'가 들어온 경우
+        if (group_id) {
+            // 1-1. 그 그룹에 속한 멤버들의 ID를 먼저 다 찾습니다.
+            const [members] = await db.query('SELECT user_id FROM group_members WHERE group_id = ?', [group_id]);
             
-            return {
-                ...row,
-                date: `${year}-${month}-${day}` // "YYYY-MM-DD" 형태로 조합
-            };
-        });
+            // 멤버가 한 명도 없으면 빈 배열 반환
+            if (members.length === 0) return res.json([]);
 
-        res.json(schedules);
+            // 1-2. 멤버들의 ID만 뽑아서 리스트로 만듭니다. (예: [1, 3, 5])
+            const memberIds = members.map(m => m.user_id);
+
+            // 1-3. 그 멤버들이 쓴 일정을 모두 가져옵니다. (SQL의 IN 문법 사용)
+            // 물음표(?)를 멤버 수만큼 만듭니다.
+            const placeholders = memberIds.map(() => '?').join(', ');
+            
+            query = `
+                SELECT s.id, s.date, s.content, s.user_id, u.name as user_name
+                FROM schedules s
+                JOIN users u ON s.user_id = u.id
+                WHERE s.user_id IN (${placeholders})
+                ORDER BY s.date ASC
+            `;
+            params = memberIds; 
+        } 
+        // 상황 2: 그냥 내 캘린더라서 'user_id'만 들어온 경우
+        else if (user_id) {
+            query = `
+                SELECT s.id, s.date, s.content, s.user_id, u.name as user_name
+                FROM schedules s
+                JOIN users u ON s.user_id = u.id
+                WHERE s.user_id = ?
+                ORDER BY s.date ASC
+            `;
+            params = [user_id];
+        } else {
+            return res.status(400).json({ message: '사용자 ID 또는 그룹 ID가 필요합니다.' });
+        }
+
+        const [rows] = await db.query(query, params);
+        res.json(rows);
 
     } catch (error) {
         console.error('일정 조회 에러:', error);

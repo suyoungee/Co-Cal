@@ -234,7 +234,8 @@
     <script>
         // --- 1. 전역 변수 ---
         let currentUser = null; 
-        
+        let currentGroupId = null; // (현재 선택된 그룹 ID 저장용)
+
         // 시간표용 상수
         const DAYS = [
             { label: '일', value: 0 }, { label: '월', value: 1 }, { label: '화', value: 2 },
@@ -343,50 +344,53 @@
             };
 
             // [일정] 불러오기
-            const loadSchedules = async (targetUserId = currentUser.id, targetUserName = '나') => {
-                if (!targetUserId) return;
-                dailySchedules = {}; 
-                document.querySelectorAll('[id^="dots-"]').forEach(el => el.innerHTML = '');
-                
+            const loadSchedules = async () => {
+                // 1. 로그인 안 했으면 중단
+                if (!currentUser) return;
+
+                // 2. 기존에 찍힌 점들(일정 표시) 지우기 (중복 표시 방지)
+                document.querySelectorAll('.schedule-dot').forEach(el => el.remove());
+
                 try {
-                    const response = await fetch(`/api/schedules?user_id=${targetUserId}`);
-                    const schedules = await response.json();
-                    const isMe = (targetUserId === currentUser.id);
-                    const dotColorClass = isMe ? 'bg-red-500' : 'bg-blue-500';
+                    let url;
 
-                    schedules.forEach(schedule => {
-                        if (!dailySchedules[schedule.date]) dailySchedules[schedule.date] = [];
-                        dailySchedules[schedule.date].push(schedule);
-                        const dotContainer = document.getElementById(`dots-${schedule.date}`);
-                        if (dotContainer) {
-                            const dot = document.createElement('div');
-                            dot.className = `w-2 h-2 ${dotColorClass} rounded-full`; 
-                            dotContainer.appendChild(dot);
-                        }
-                    });
-
-                    // 날짜 선택 상태 유지 및 리스트 갱신
-                    const currentDateVal = document.getElementById('log-date').value;
-                    if(currentDateVal && isMe) {
-                        renderScheduleList(currentDateVal);
-                    }
-
-                    const textArea = document.getElementById('log-content');
-                    if (!isMe) {
-                        textArea.placeholder = `${targetUserName}님의 공부 기록입니다. (보기 전용)`;
-                        textArea.disabled = true;
-                        saveLogBtn.classList.add('hidden');
-                        deleteLogBtn.classList.add('hidden');
-                        newEntryBtn.classList.add('hidden');
-                        backBtn.classList.remove('hidden');
-                        scheduleListContainer.classList.add('hidden'); 
+                    // ★ 여기가 핵심 변경 사항입니다 ★
+                    // 전역 변수 currentGroupId에 값이 있으면 '그룹 일정'을, 없으면 '내 일정'을 요청
+                    if (currentGroupId) {
+                        url = `/api/schedules?group_id=${currentGroupId}`;
                     } else {
-                        textArea.placeholder = "오늘 공부한 내용을 기록하세요...";
-                        textArea.disabled = false;
-                        saveLogBtn.classList.remove('hidden');
-                        backBtn.classList.add('hidden');
+                        url = `/api/schedules?user_id=${currentUser.id}`;
                     }
-                } catch (error) { console.error('일정 로드 실패:', error); }
+
+                    const res = await fetch(url);
+                    
+                    if (res.ok) {
+                        const schedules = await res.json();
+
+                        // 3. 가져온 일정들을 달력 날짜에 점으로 표시
+                        schedules.forEach(schedule => {
+                            // 날짜 문자열(YYYY-MM-DD)만 추출
+                            const dateStr = schedule.date.split('T')[0];
+                            
+                            // 해당 날짜 칸(div) 찾기
+                            const dayDiv = document.querySelector(`div[data-date="${dateStr}"]`);
+                            
+                            if (dayDiv) {
+                                // 점(Dot) 만들기
+                                const dot = document.createElement('div');
+                                // 파란색 점 스타일 (Tailwind CSS)
+                                dot.className = 'schedule-dot w-2 h-2 bg-blue-500 rounded-full mx-auto mt-1';
+                                
+                                // 마우스 올리면 "작성자: 내용"이 보이도록 툴팁 설정
+                                dot.title = `${schedule.user_name || '익명'}: ${schedule.content}`;
+                                
+                                dayDiv.appendChild(dot);
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error("일정 로딩 실패:", error);
+                }
             };
 
             // [그룹] 목록 로드 (자동선택 포함)
