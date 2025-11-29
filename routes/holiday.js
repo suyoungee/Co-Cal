@@ -30,7 +30,9 @@ const holidayNameMap = {
     "Alternative holiday": "대체 공휴일",    // [추가] 영어로 나오는 대체공휴일 번역
     "Substitute Holiday": "대체 공휴일",     // [추가] 혹시 다른 이름으로 나올 경우 대비
     "Election Day": "선거일",
-    "Buddha's Birthday Holiday": "부처님 오신 날"
+    "Buddha's Birthday Holiday": "부처님 오신 날",
+    "Day off for Buddha’s Birthday" : "부처님 오신 날",
+    "National Assembly Election Day" : "국회의원 선거일"
 };
 
 router.get('/', async (req, res) => {
