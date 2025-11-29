@@ -256,4 +256,41 @@ router.delete('/:groupId', async (req, res) => {
     }
 });
 
+// 멤버 탈퇴/추방 API (DELETE /api/groups/:groupId/members/:memberId)
+router.delete('/:groupId/members/:memberId', async (req, res) => {
+    const { groupId, memberId } = req.params;
+    const { requesterId } = req.body; // 요청한 사람 ID (본인 또는 방장)
+
+    try {
+        // 그룹 정보 조회 (방장이 누구인지 확인)
+        const [group] = await db.query('SELECT created_by FROM study_groups WHERE id = ?', [groupId]);
+        if (group.length === 0) return res.status(404).json({ message: '그룹이 없습니다.' });
+        
+        const leaderId = group[0].created_by;
+
+        // 권한 확인
+        // Case A: 스스로 탈퇴 (요청자 == 삭제대상)
+        // Case B: 방장이 추방 (요청자 == 방장)
+        if (parseInt(requesterId) !== parseInt(memberId) && parseInt(requesterId) !== leaderId) {
+            return res.status(403).json({ message: '권한이 없습니다.' });
+        }
+
+        // 방장 스스로 탈퇴하려는 경우 막기 (그룹 삭제를 이용해야 함)
+        if (parseInt(memberId) === leaderId) {
+            return res.status(400).json({ message: '방장은 탈퇴할 수 없습니다. 그룹을 삭제해주세요.' });
+        }
+
+        // DB에서 삭제
+        await db.query('DELETE FROM group_members WHERE group_id = ? AND user_id = ?', [groupId, memberId]);
+
+        // 메시지 구분
+        const msg = (parseInt(requesterId) === parseInt(memberId)) ? '탈퇴했습니다.' : '멤버를 추방했습니다.';
+        res.json({ message: msg });
+
+    } catch (error) {
+        console.error('멤버 삭제 실패:', error);
+        res.status(500).json({ message: '서버 오류' });
+    }
+});
+
 module.exports = router;
