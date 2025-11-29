@@ -263,73 +263,78 @@
         </div>
     </div>
 
-    <script>
+        <script>
         // 1. 전역 변수
         let currentUser = null; 
         
         document.addEventListener('DOMContentLoaded', () => {
-            // --- 변수 선언 ---
+            // --- [상태 변수] ---
             let selectedScheduleId = null; 
             let dailySchedules = {};       
             let currentGroupId = null; 
             
-            // --- DOM 요소 ---
+            // --- [DOM 요소] ---
             const loginPage = document.getElementById('login-page');
             const signupPage = document.getElementById('signup-page');
             const mainPage = document.getElementById('main-page');
-
             const showSignupBtn = document.getElementById('show-signup');
             const showLoginBtn = document.getElementById('show-login');
             const loginForm = document.getElementById('login-form');
             const signupForm = document.getElementById('signup-form');
             const logoutBtn = document.getElementById('logout-button');
 
-            // 모달 관련 DOM
-            const groupModal = document.getElementById('group-detail-modal');
-            const modalGroupName = document.getElementById('modal-group-name');
-            const modalMemberList = document.getElementById('modal-member-list');
-            const btnCloseModal = document.getElementById('btn-close-modal');
-            const btnInviteMember = document.getElementById('btn-invite-member');
+            const calendarGrid = document.getElementById('calendar-grid');
+            const monthYearTitle = document.getElementById('current-month-year');
+            const prevBtn = document.getElementById('prev-month');
+            const nextBtn = document.getElementById('next-month');
+            const saveLogBtn = document.getElementById('save-log');
+            const deleteLogBtn = document.getElementById('delete-log');
+            const newEntryBtn = document.getElementById('btn-new-entry');
+            const backBtn = document.getElementById('btn-back-to-my');
 
-            // 검색 모달 관련
-            const btnOpenSearch = document.getElementById('btn-open-search-modal');
+            const groupListEl = document.getElementById('my-group-list');
+            const btnToggleGroup = document.getElementById('btn-toggle-group-form');
+            const groupFormContainer = document.getElementById('create-group-form-container');
+            const btnCreateGroup = document.getElementById('btn-create-group');
+            const btnCancelGroup = document.getElementById('btn-cancel-group');
+            const btnOpenSearch = document.getElementById('btn-open-search-modal'); 
+
             const searchModal = document.getElementById('group-search-modal');
             const btnCloseSearch = document.getElementById('btn-close-search');
             const searchInput = document.getElementById('search-group-keyword');
             const btnSearch = document.getElementById('btn-search-group');
             const searchResultList = document.getElementById('search-result-list');
 
-            // 방장 기능 관련
+            const groupModal = document.getElementById('group-detail-modal');
+            const modalGroupName = document.getElementById('modal-group-name');
+            const modalMemberList = document.getElementById('modal-member-list');
+            const btnCloseModal = document.getElementById('btn-close-modal');
+            const btnInviteMember = document.getElementById('btn-invite-member');
+            
             const leaderSection = document.getElementById('leader-section');
             const joinRequestList = document.getElementById('join-request-list');
             const leaderDeleteSection = document.getElementById('leader-delete-section');
             const btnDeleteGroup = document.getElementById('btn-delete-group');
 
+
             // --- [함수 정의] ---
 
-            // 1. 일정 불러오기 함수
+            // 1. 일정 불러오기
             const loadSchedules = async (targetUserId = currentUser.id, targetUserName = '나') => {
                 if (!targetUserId) return;
-
-                // 초기화
                 dailySchedules = {}; 
                 document.querySelectorAll('[id^="dots-"]').forEach(el => el.innerHTML = '');
-
-                // 누구의 달력을 보고 있는지 헤더 표시
                 console.log(`${targetUserName}님의 일정을 불러옵니다...`);
 
                 try {
                     const response = await fetch(`/api/schedules?user_id=${targetUserId}`);
                     const schedules = await response.json();
 
-                    // 색상 결정 (본인은 빨강, 다른 사람은 파랑)
                     const isMe = (targetUserId === currentUser.id);
                     const dotColorClass = isMe ? 'bg-red-500' : 'bg-blue-500';
 
                     schedules.forEach(schedule => {
-                        if (!dailySchedules[schedule.date]) {
-                            dailySchedules[schedule.date] = [];
-                        }
+                        if (!dailySchedules[schedule.date]) dailySchedules[schedule.date] = [];
                         dailySchedules[schedule.date].push(schedule);
 
                         const dotContainer = document.getElementById(`dots-${schedule.date}`);
@@ -340,354 +345,74 @@
                         }
                     });
 
-                    // 입력창 상태 변경
-                    const saveBtn = document.getElementById('save-log');
-                    const deleteBtn = document.getElementById('delete-log');
                     const textArea = document.getElementById('log-content');
-                    const newEntryBtn = document.getElementById('btn-new-entry');
-                    const backBtn = document.getElementById('btn-back-to-my');
-                    
                     if (!isMe) {
                         textArea.placeholder = `${targetUserName}님의 공부 기록입니다. (보기 전용)`;
                         textArea.disabled = true;
-                        saveBtn.classList.add('hidden');
-                        deleteBtn.classList.add('hidden');
+                        saveLogBtn.classList.add('hidden');
+                        deleteLogBtn.classList.add('hidden');
                         newEntryBtn.classList.add('hidden');
                         backBtn.classList.remove('hidden');
                     } else {
                         textArea.placeholder = "오늘 공부한 내용을 기록하세요...";
                         textArea.disabled = false;
-                        saveBtn.classList.remove('hidden');
+                        saveLogBtn.classList.remove('hidden');
                         backBtn.classList.add('hidden');
                     }
-
-                } catch (error) {
-                    console.error('일정 로드 실패:', error);
-                }
+                } catch (error) { console.error('일정 로드 실패:', error); }
             };
 
-            // 2. 멤버 목록 로드 함수
-            const loadGroupMembers = async (groupId) => {
+            // 2. 가입 신청 목록 로드 (방장용)
+            const loadJoinRequests = async (groupId) => {
                 try {
-                    const response = await fetch(`/api/groups/${groupId}/members`);
-                    const members = await response.json();
+                    const response = await fetch(`/api/groups/${groupId}/requests`);
+                    const requests = await response.json();
 
-                    console.log('받아온 멤버 리스트:', members);
+                    joinRequestList.innerHTML = '';
+                    if (requests.length === 0) {
+                        joinRequestList.innerHTML = '<li class="text-xs text-gray-400 text-center py-2">대기 중인 신청이 없습니다.</li>';
+                        return;
+                    }
 
-                    modalMemberList.innerHTML = ''; // 목록 비우기
-                    
-                    members.forEach(member => {
+                    requests.forEach(req => {
                         const li = document.createElement('li');
-
-                        li.className = 'flex justify-between items-center text-sm p-2 border-b border-gray-100 cursor-pointer hover:bg-gray-100 transition';
-                        
-                        let isMe = '';
-                        if (currentUser && currentUser.id === member.id) {
-                            isMe = '<span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-1 rounded ml-2">나</span>';
-                        }
-
+                        li.className = 'flex justify-between items-center bg-white p-2 border rounded shadow-sm';
                         li.innerHTML = `
-                            <div class="flex items-center">
-                                <span class="font-medium text-gray-800">${member.name}</span>
-                                <span class="text-xs text-gray-400 ml-2">(${member.email})</span>
+                            <div class="text-xs">
+                                <span class="font-bold text-gray-800">${req.name}</span>
+                                <span class="text-gray-500">(${req.email})</span>
                             </div>
-                            ${isMe}
+                            <div class="flex gap-1">
+                                <button class="btn-approve bg-green-500 text-white text-[10px] px-2 py-1 rounded hover:bg-green-600">승인</button>
+                                <button class="btn-reject bg-red-500 text-white text-[10px] px-2 py-1 rounded hover:bg-red-600">거절</button>
+                            </div>
                         `;
-                        
-                        // 클릭 시 친구 일정 보기
-                        li.addEventListener('click', () => {
-                            loadSchedules(member.id, member.name); 
-                            
-                            // 모달 닫기
-                            groupModal.classList.add('hidden');
-                            currentGroupId = null;
-                            
-                            alert(`${member.name}님의 캘린더로 전환되었습니다.`);
-                        });
-                        modalMemberList.appendChild(li); 
+                        li.querySelector('.btn-approve').addEventListener('click', () => handleJoinRequest(groupId, req.id, 'approve'));
+                        li.querySelector('.btn-reject').addEventListener('click', () => handleJoinRequest(groupId, req.id, 'reject'));
+                        joinRequestList.appendChild(li);
                     });
-                } catch (error) {
-                    console.error('멤버 로드 실패:', error);
-                }
+                } catch (error) { console.error('신청 목록 로드 실패:', error); }
             };
 
-            // 3. 모달 열기 함수
-            const openGroupModal = async (groupId, groupName, createdBy) => {
-                currentGroupId = groupId;
-                modalGroupName.innerText = groupName;
-                groupModal.classList.remove('hidden');
-
-                loadGroupMembers(groupId);
-
-                // 방장 기능: 신청 관리 & 삭제 버튼 표시
-                if (currentUser.id === createdBy) {
-                    leaderSection.classList.remove('hidden');       // 가입 신청 관리
-                    leaderDeleteSection.classList.remove('hidden'); // 삭제 버튼 보이기
-                    loadJoinRequests(groupId);
-                } else {
-                    leaderSection.classList.add('hidden');
-                    leaderDeleteSection.classList.add('hidden');    // 삭제 버튼 숨기기
-                }
-            };
-
-
-            // --- [페이지 로직] ---
-
-            showSignupBtn.addEventListener('click', () => {
-                loginPage.classList.add('hidden');
-                signupPage.classList.remove('hidden');
-            });
-
-            showLoginBtn.addEventListener('click', () => {
-                signupPage.classList.add('hidden');
-                loginPage.classList.remove('hidden');
-            });
-
-            loginForm.addEventListener('submit', async (e) => {
-                e.preventDefault(); 
-                
-                const email = document.getElementById('login-email').value;
-                const password = document.getElementById('login-password').value;
-                
+            // 3. 가입 승인/거절 처리 (방장용)
+            const handleJoinRequest = async (groupId, requestId, action) => {
+                if (!confirm(action === 'approve' ? '가입을 승인하시겠습니까?' : '거절하시겠습니까?')) return;
                 try {
-                    const response = await fetch('/api/auth/login', {
+                    const response = await fetch(`/api/groups/${groupId}/requests/${requestId}/handle`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password }),
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok) {
-                        alert('환영합니다, ' + data.user.name + '님!');
-                        currentUser = data.user;
-
-                        renderCalendar();
-                        loadGroups(); // 그룹 목록 불러오기
-                        
-                        const headerUserInfo = document.querySelector('header span');
-                        if(headerUserInfo) headerUserInfo.innerText = `${data.user.name}님 로그인됨`;
-
-                        loginPage.classList.add('hidden');
-                        mainPage.classList.remove('hidden');
-                    } else {
-                        alert('실패: ' + data.message);
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('오류 발생');
-                }
-            });
-
-            signupForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const name = document.getElementById('signup-name').value;
-                const email = document.getElementById('signup-email').value;
-                const password = document.getElementById('signup-password').value;
-
-                try {
-                    const response = await fetch('/api/auth/signup', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, email, password }),
+                        body: JSON.stringify({ action })
                     });
                     const data = await response.json();
                     if (response.ok) {
-                        alert('성공: ' + data.message);
-                        signupPage.classList.add('hidden');
-                        loginPage.classList.remove('hidden');
-                    } else {
-                        alert('실패: ' + data.message);
-                    }
-                } catch (error) { console.error(error); }
-            });
-
-            logoutBtn.addEventListener('click', () => {
-                if (!confirm('정말 로그아웃 하시겠습니까?')) return;
-                mainPage.classList.add('hidden');
-                loginPage.classList.remove('hidden');
-                document.getElementById('login-email').value = '';
-                document.getElementById('login-password').value = '';
-                currentUser = null;
-                alert('로그아웃 되었습니다.');
-            });
-
-            // --- [캘린더 로직] ---
-            let currentDate = new Date();
-            const calendarGrid = document.getElementById('calendar-grid');
-            const monthYearTitle = document.getElementById('current-month-year');
-            const prevBtn = document.getElementById('prev-month');
-            const nextBtn = document.getElementById('next-month');
-
-            const renderCalendar = async () => {
-                calendarGrid.innerHTML = '';
-                const year = currentDate.getFullYear();
-                const month = currentDate.getMonth();
-
-                monthYearTitle.innerText = `${year}년 ${month + 1}월`;
-
-                const firstDayIndex = new Date(year, month, 1).getDay();
-                const lastDay = new Date(year, month + 1, 0).getDate();
-
-                for (let i = 0; i < firstDayIndex; i++) {
-                    const emptyDiv = document.createElement('div');
-                    emptyDiv.className = 'p-2 bg-gray-50 rounded-md';
-                    calendarGrid.appendChild(emptyDiv);
-                }
-            
-                for (let i = 1; i <= lastDay; i++) {
-                    const dateDiv = document.createElement('div');
-                    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-                    dateDiv.dataset.date = dateString;
-                    dateDiv.className = 'p-2 border border-gray-200 rounded-md bg-white hover:bg-indigo-50 cursor-pointer h-24 transition flex flex-col justify-between';
-                    dateDiv.innerHTML = `
-                        <span class="font-semibold text-gray-700">${i}</span>
-                        <div id="dots-${dateString}" class="flex gap-1 justify-center text-xs text-red-500"></div> 
-                    `;
-
-                    dateDiv.addEventListener('click', () => {
-                        document.getElementById('log-date').value = dateString;
-                        resetFormToCreateMode();
-                        renderScheduleList(dateString);
-                    });
-                    calendarGrid.appendChild(dateDiv);
-                }
-
-                loadHolidays(year);
-                if (currentUser) await loadSchedules(); 
+                        alert(data.message);
+                        loadJoinRequests(groupId); 
+                        loadGroupMembers(groupId); 
+                    } else { alert('오류: ' + data.message); }
+                } catch (error) { console.error(error); alert('처리 중 오류 발생'); }
             };
 
-            const loadHolidays = async (year) => {
-                try {
-                    const response = await fetch(`/api/holidays?year=${year}&country=KR`);
-                    if (response.ok) {
-                        const holidays = await response.json();
-                        holidays.forEach(holiday => {
-                            const dateDiv = document.querySelector(`div[data-date="${holiday.date}"]`);
-                            if (dateDiv) {
-                                const daySpan = dateDiv.querySelector('span');
-                                if(daySpan) {
-                                    daySpan.classList.remove('text-gray-700');
-                                    daySpan.classList.add('text-red-500');
-                                }
-                                if(!dateDiv.querySelector('.holiday-name')) {
-                                    const holidayNameDiv = document.createElement('div');
-                                    holidayNameDiv.className = 'holiday-name text-xs text-red-500 mt-1 truncate font-bold';
-                                    holidayNameDiv.innerText = holiday.name;
-                                    dateDiv.insertBefore(holidayNameDiv, dateDiv.lastElementChild);
-                                }
-                            }
-                        });
-                    }
-                } catch (error) { console.error(error); }
-            };
-
-            const renderScheduleList = (dateString) => {
-                const listContainer = document.getElementById('schedule-list-container');
-                const listElement = document.getElementById('schedule-list');
-                const items = dailySchedules[dateString] || [];
-
-                if (items.length === 0) {
-                    listContainer.classList.add('hidden');
-                    return;
-                }
-
-                listContainer.classList.remove('hidden');
-                listElement.innerHTML = '';
-
-                items.forEach(item => {
-                    const li = document.createElement('li');
-                    li.className = 'p-2 bg-white border border-gray-200 rounded hover:bg-indigo-50 cursor-pointer text-sm truncate';
-                    li.innerText = item.content; 
-                    
-                    li.addEventListener('click', () => {
-                        document.getElementById('log-content').value = item.content;
-                        selectedScheduleId = item.id;
-                        document.getElementById('save-log').innerText = '수정';
-                        document.getElementById('delete-log').classList.remove('hidden');
-                        document.getElementById('btn-new-entry').classList.remove('hidden');
-                    });
-                    listElement.appendChild(li);
-                });
-            };
-
-            document.getElementById('btn-new-entry').addEventListener('click', () => {
-                resetFormToCreateMode();
-            });
-
-            const resetFormToCreateMode = () => {
-                document.getElementById('log-content').value = '';
-                selectedScheduleId = null;
-                document.getElementById('save-log').innerText = '기록 저장';
-                document.getElementById('delete-log').classList.add('hidden');
-                document.getElementById('btn-new-entry').classList.add('hidden');
-            };
-
-            prevBtn.addEventListener('click', () => {
-                currentDate.setMonth(currentDate.getMonth() - 1);
-                renderCalendar();
-            });
-            nextBtn.addEventListener('click', () => {
-                currentDate.setMonth(currentDate.getMonth() + 1);
-                renderCalendar();
-            });
-
-            const saveLogBtn = document.getElementById('save-log');
-            saveLogBtn.addEventListener('click', async () => {
-                if (!currentUser) return alert('로그인이 필요합니다.');
-                const date = document.getElementById('log-date').value;
-                const content = document.getElementById('log-content').value;
-                if (!date || !content.trim()) return alert('날짜와 내용을 입력하세요.');
-
-                const method = selectedScheduleId ? 'PUT' : 'POST';
-                const url = selectedScheduleId ? `/api/schedules/${selectedScheduleId}` : '/api/schedules';
-
-                try {
-                    const response = await fetch(url, {
-                        method: method,
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            user_id: currentUser.id,
-                            date: date,
-                            content: content
-                        }),
-                    });
-                    if (response.ok) {
-                        alert(selectedScheduleId ? '수정되었습니다!' : '저장되었습니다!');
-                        resetFormToCreateMode();
-                        loadSchedules(); 
-                    } else {
-                        const data = await response.json();
-                        alert('실패: ' + data.message);
-                    }
-                } catch (error) { console.error(error); }
-            });
-
-            document.getElementById('delete-log').addEventListener('click', async () => {
-                if (!selectedScheduleId || !confirm('정말 삭제하시겠습니까?')) return;
-                try {
-                    const response = await fetch(`/api/schedules/${selectedScheduleId}`, {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user_id: currentUser.id }) 
-                    });
-                    if (response.ok) {
-                        alert('삭제되었습니다.');
-                        resetFormToCreateMode();
-                        loadSchedules(); 
-                    } else {
-                        alert('삭제 실패');
-                    }
-                } catch (error) { console.error(error); }
-            });
-            
-            // --- [스터디 그룹 로직] ---
-            const groupListEl = document.getElementById('my-group-list');
-            const btnToggleGroup = document.getElementById('btn-toggle-group-form');
-            const groupFormContainer = document.getElementById('create-group-form-container');
-            const btnCreateGroup = document.getElementById('btn-create-group');
-            const btnCancelGroup = document.getElementById('btn-cancel-group');
-
+            // 4. 내 그룹 목록 불러오기
             const loadGroups = async () => {
                 if (!currentUser) return;
                 try {
@@ -702,13 +427,15 @@
 
                     groups.forEach(group => {
                         const li = document.createElement('li');
-                        li.className = 'p-2 border border-gray-100 rounded hover:bg-indigo-50 cursor-pointer transition';
+                        li.className = 'p-2 border border-gray-100 rounded hover:bg-indigo-50 cursor-pointer transition flex justify-between items-center';
                         li.innerHTML = `
-                            <div class="font-medium text-indigo-600">
-                                ${group.name}
-                                ${group.created_by === currentUser.id ? '👑' : ''}
+                            <div>
+                                <div class="font-medium text-indigo-600 flex items-center gap-1">
+                                    ${group.name}
+                                    ${group.created_by === currentUser.id ? '<span class="text-[10px] bg-yellow-100 text-yellow-700 px-1 rounded">👑</span>' : ''}
+                                </div>
+                                <div class="text-xs text-gray-500 truncate">${group.description || '설명 없음'}</div>
                             </div>
-                            <div class="text-xs text-gray-500 truncate">${group.description || '설명 없음'}</div>
                         `;
                         li.addEventListener('click', () => {
                             openGroupModal(group.id, group.name, group.created_by);
@@ -718,33 +445,190 @@
                 } catch (error) { console.error('그룹 로드 실패:', error); }
             };
 
+            // 5. 멤버 목록 로드
+            const loadGroupMembers = async (groupId) => {
+                try {
+                    const response = await fetch(`/api/groups/${groupId}/members`);
+                    const members = await response.json();
+                    modalMemberList.innerHTML = ''; 
+                    
+                    members.forEach(member => {
+                        const li = document.createElement('li');
+                        li.className = 'flex justify-between items-center text-sm p-2 border-b border-gray-100 cursor-pointer hover:bg-gray-100 transition';
+                        
+                        let isMe = '';
+                        if (currentUser && currentUser.id === member.id) {
+                            isMe = '<span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-1 rounded ml-2">나</span>';
+                        }
+                        li.innerHTML = `
+                            <div class="flex items-center">
+                                <span class="font-medium text-gray-800">${member.name}</span>
+                                <span class="text-xs text-gray-400 ml-2">(${member.email})</span>
+                            </div>
+                            ${isMe}
+                        `;
+                        li.addEventListener('click', () => {
+                            loadSchedules(member.id, member.name); 
+                            groupModal.classList.add('hidden');
+                            currentGroupId = null;
+                            alert(`${member.name}님의 캘린더로 전환되었습니다.`);
+                        });
+                        modalMemberList.appendChild(li); 
+                    });
+                } catch (error) { console.error('멤버 로드 실패:', error); }
+            };
+
+            // 6. 그룹 상세 모달 열기
+            const openGroupModal = async (groupId, groupName, createdBy) => {
+                currentGroupId = groupId;
+                modalGroupName.innerText = groupName;
+                groupModal.classList.remove('hidden');
+
+                loadGroupMembers(groupId);
+
+                if (currentUser.id === createdBy) {
+                    if(leaderSection) leaderSection.classList.remove('hidden');
+                    if(leaderDeleteSection) leaderDeleteSection.classList.remove('hidden');
+                    loadJoinRequests(groupId);
+                } else {
+                    if(leaderSection) leaderSection.classList.add('hidden');
+                    if(leaderDeleteSection) leaderDeleteSection.classList.add('hidden');
+                }
+            };
+
+            // 7. 그룹 검색 함수
+            const searchGroups = async () => {
+                const keyword = searchInput.value.trim();
+                try {
+                    const response = await fetch(`/api/groups/search/all?keyword=${encodeURIComponent(keyword)}`);
+                    const groups = await response.json();
+                    searchResultList.innerHTML = '';
+                    if (groups.length === 0) {
+                        searchResultList.innerHTML = '<li class="text-center text-gray-500 mt-4">검색 결과가 없습니다.</li>';
+                        return;
+                    }
+                    groups.forEach(group => {
+                        const li = document.createElement('li');
+                        li.className = 'bg-white border rounded p-3 shadow-sm hover:shadow-md transition';
+                        li.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="font-bold text-indigo-600">${group.name}</div>
+                                    <div class="text-xs text-gray-500 mt-1">${group.description || '설명 없음'}</div>
+                                    <div class="text-xs text-gray-400 mt-2">방장: ${group.creator_name} | 멤버: ${group.member_count}명</div>
+                                </div>
+                                <button class="btn-join-req bg-indigo-100 text-indigo-700 text-xs px-3 py-1.5 rounded hover:bg-indigo-200 font-bold">
+                                    가입 신청
+                                </button>
+                            </div>
+                        `;
+                        li.querySelector('.btn-join-req').addEventListener('click', async () => {
+                            if (!currentUser) return alert('로그인이 필요합니다.');
+                            if (confirm(`'${group.name}' 그룹에 가입 신청하시겠습니까?`)) {
+                                try {
+                                    const res = await fetch(`/api/groups/${group.id}/join`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ user_id: currentUser.id })
+                                    });
+                                    const data = await res.json();
+                                    alert(data.message);
+                                } catch (err) { console.error(err); alert('신청 실패'); }
+                            }
+                        });
+                        searchResultList.appendChild(li);
+                    });
+                } catch (error) { console.error('검색 실패:', error); }
+            };
+
+
+            // --- [이벤트 리스너 연결] ---
+
+            showSignupBtn.addEventListener('click', () => { loginPage.classList.add('hidden'); signupPage.classList.remove('hidden'); });
+            showLoginBtn.addEventListener('click', () => { signupPage.classList.add('hidden'); loginPage.classList.remove('hidden'); });
+            
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault(); 
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                try {
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password }),
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        alert('환영합니다, ' + data.user.name + '님!');
+                        currentUser = data.user;
+                        renderCalendar();
+                        loadGroups(); 
+                        const headerUserInfo = document.querySelector('header span');
+                        if(headerUserInfo) headerUserInfo.innerText = `${data.user.name}님 로그인됨`;
+                        loginPage.classList.add('hidden');
+                        mainPage.classList.remove('hidden');
+                    } else { alert('실패: ' + data.message); }
+                } catch (error) { console.error('Error:', error); }
+            });
+
+            signupForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('signup-name').value;
+                const email = document.getElementById('signup-email').value;
+                const password = document.getElementById('signup-password').value;
+                try {
+                    const response = await fetch('/api/auth/signup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, email, password }),
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        alert('성공: ' + data.message);
+                        signupPage.classList.add('hidden');
+                        loginPage.classList.remove('hidden');
+                    } else { alert('실패: ' + data.message); }
+                } catch (error) { console.error(error); }
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                if (!confirm('정말 로그아웃 하시겠습니까?')) return;
+                mainPage.classList.add('hidden');
+                loginPage.classList.remove('hidden');
+                document.getElementById('login-email').value = '';
+                document.getElementById('login-password').value = '';
+                currentUser = null;
+                alert('로그아웃 되었습니다.');
+            });
+
+            // 내 달력으로 복귀
+            document.getElementById('current-month-year').addEventListener('click', () => {
+                if(currentUser) { loadSchedules(currentUser.id, '나'); alert('나의 캘린더로 돌아왔습니다.'); }
+            });
+            backBtn.addEventListener('click', () => {
+                if(currentUser) { loadSchedules(currentUser.id, '나'); alert('나의 캘린더로 돌아왔습니다.'); }
+            });
+
+            // 그룹 사이드바
             btnToggleGroup.addEventListener('click', () => {
                 groupFormContainer.classList.remove('hidden');
                 document.getElementById('new-group-name').focus();
             });
-
             btnCancelGroup.addEventListener('click', () => {
                 groupFormContainer.classList.add('hidden');
                 document.getElementById('new-group-name').value = '';
                 document.getElementById('new-group-desc').value = '';
             });
-
             btnCreateGroup.addEventListener('click', async () => {
                 if (!currentUser) return alert('로그인이 필요합니다.');
                 const name = document.getElementById('new-group-name').value;
                 const desc = document.getElementById('new-group-desc').value;
-
                 if (!name.trim()) return alert('그룹 이름을 입력해주세요.');
-
                 try {
                     const response = await fetch('/api/groups', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            user_id: currentUser.id,
-                            name: name,
-                            description: desc
-                        }),
+                        body: JSON.stringify({ user_id: currentUser.id, name, description: desc }),
                     });
                     const data = await response.json();
                     if (response.ok) {
@@ -753,22 +637,22 @@
                         document.getElementById('new-group-desc').value = '';
                         groupFormContainer.classList.add('hidden');
                         loadGroups();
-                    } else {
-                        alert('실패: ' + data.message);
-                    }
-                } catch (error) { console.error(error); alert('오류 발생'); }
+                    } else { alert('실패: ' + data.message); }
+                } catch (error) { console.error(error); }
             }); 
-
-            // 내 달력으로 복귀
-            document.getElementById('btn-back-to-my').addEventListener('click', () => {
-                if (currentUser) {
-                    loadSchedules(currentUser.id, '나');
-                    alert('나의 캘린더로 돌아왔습니다.');
-                }
+            
+            // 그룹 검색 모달
+            btnOpenSearch.addEventListener('click', () => {
+                searchModal.classList.remove('hidden');
+                searchInput.value = '';
+                searchResultList.innerHTML = ''; 
+                searchGroups(); 
             });
-            document.getElementById('current-month-year').classList.add('cursor-pointer', 'hover:text-indigo-600');           
+            btnCloseSearch.addEventListener('click', () => searchModal.classList.add('hidden'));
+            btnSearch.addEventListener('click', searchGroups);
+            searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchGroups(); });
 
-            // --- [모달 이벤트 리스너] ---
+            // 상세 모달
             btnCloseModal.addEventListener('click', () => {
                 groupModal.classList.add('hidden');
                 currentGroupId = null;
@@ -789,189 +673,146 @@
                         alert('초대되었습니다!');
                         document.getElementById('invite-email').value = '';
                         loadGroupMembers(currentGroupId); 
-                    } else {
-                        alert('실패: ' + data.message);
-                    }
+                    } else { alert('실패: ' + data.message); }
                 } catch (error) { console.error(error); alert('오류 발생'); }
             });
 
-            // 초기 렌더링
-            renderCalendar();
-        });
+            // ★ 그룹 삭제 이벤트
+            if (btnDeleteGroup) {
+                btnDeleteGroup.addEventListener('click', async () => {
+                    if (!currentGroupId) return;
+                    if (!confirm('정말 이 스터디 그룹을 삭제하시겠습니까?')) return;
+                    if (!confirm('삭제된 데이터는 복구할 수 없습니다. 정말 삭제합니까?')) return;
 
-
-        // [방장용] 가입 신청 목록 불러오기
-        const loadJoinRequests = async (groupId) => {
-            try {
-                const response = await fetch(`/api/groups/${groupId}/requests`);
-                const requests = await response.json();
-
-                joinRequestList.innerHTML = '';
-                if (requests.length === 0) {
-                    joinRequestList.innerHTML = '<li class="text-xs text-gray-400 text-center py-2">대기 중인 신청이 없습니다.</li>';
-                    return;
-                }
-
-                requests.forEach(req => {
-                    const li = document.createElement('li');
-                    li.className = 'flex justify-between items-center bg-white p-2 border rounded shadow-sm';
-                    li.innerHTML = `
-                        <div class="text-xs">
-                            <span class="font-bold text-gray-800">${req.name}</span>
-                            <span class="text-gray-500">(${req.email})</span>
-                        </div>
-                        <div class="flex gap-1">
-                            <button class="btn-approve bg-green-500 text-white text-[10px] px-2 py-1 rounded hover:bg-green-600">승인</button>
-                            <button class="btn-reject bg-red-500 text-white text-[10px] px-2 py-1 rounded hover:bg-red-600">거절</button>
-                        </div>
-                    `;
-                    
-                    // 승인 버튼
-                    li.querySelector('.btn-approve').addEventListener('click', () => handleJoinRequest(groupId, req.id, 'approve'));
-                    // 거절 버튼
-                    li.querySelector('.btn-reject').addEventListener('click', () => handleJoinRequest(groupId, req.id, 'reject'));
-
-                    joinRequestList.appendChild(li);
+                    try {
+                        const response = await fetch(`/api/groups/${currentGroupId}`, {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ user_id: currentUser.id })
+                        });
+                        const data = await response.json();
+                        if (response.ok) {
+                            alert(data.message);
+                            groupModal.classList.add('hidden');
+                            currentGroupId = null;
+                            loadGroups(); 
+                            loadSchedules(currentUser.id, '나');
+                        } else { alert('삭제 실패: ' + data.message); }
+                    } catch (error) { console.error(error); alert('서버 오류 발생'); }
                 });
-            } catch (error) {
-                console.error('신청 목록 로드 실패:', error);
             }
-        };
 
-        // [방장용] 가입 승인/거절 처리
-        const handleJoinRequest = async (groupId, requestId, action) => {
-            if (!confirm(action === 'approve' ? '가입을 승인하시겠습니까?' : '거절하시겠습니까?')) return;
+            // 일정 CRUD
+            newEntryBtn.addEventListener('click', () => resetFormToCreateMode());
+            const resetFormToCreateMode = () => {
+                document.getElementById('log-content').value = '';
+                selectedScheduleId = null;
+                saveLogBtn.innerText = '기록 저장';
+                deleteLogBtn.classList.add('hidden');
+                newEntryBtn.classList.add('hidden');
+            };
 
-            try {
-                const response = await fetch(`/api/groups/${groupId}/requests/${requestId}/handle`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action })
-                });
-                const data = await response.json();
-                
-                if (response.ok) {
-                    alert(data.message);
-                    loadJoinRequests(groupId); // 목록 갱신
-                    loadGroupMembers(groupId); // (승인 시) 멤버 목록도 갱신
-                } else {
-                    alert('오류: ' + data.message);
-                }
-            } catch (error) {
-                console.error(error);
-                alert('처리 중 오류 발생');
-            }
-        };
+            saveLogBtn.addEventListener('click', async () => {
+                if (!currentUser) return alert('로그인이 필요합니다.');
+                const date = document.getElementById('log-date').value;
+                const content = document.getElementById('log-content').value;
+                if (!date || !content.trim()) return alert('날짜와 내용을 입력하세요.');
+                const method = selectedScheduleId ? 'PUT' : 'POST';
+                const url = selectedScheduleId ? `/api/schedules/${selectedScheduleId}` : '/api/schedules';
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: currentUser.id, date, content }),
+                    });
+                    if (response.ok) {
+                        alert(selectedScheduleId ? '수정되었습니다!' : '저장되었습니다!');
+                        resetFormToCreateMode();
+                        loadSchedules(); 
+                    } else { alert('실패: ' + (await response.json()).message); }
+                } catch (error) { console.error(error); }
+            });
 
-        // [검색용] 그룹 검색 및 결과 표시
-        const searchGroups = async () => {
-            const keyword = searchInput.value.trim();
-            // 키워드 없으면 전체 검색
-            try {
-                const response = await fetch(`/api/groups/search/all?keyword=${encodeURIComponent(keyword)}`);
-                const groups = await response.json();
+            deleteLogBtn.addEventListener('click', async () => {
+                if (!selectedScheduleId || !confirm('정말 삭제하시겠습니까?')) return;
+                try {
+                    const response = await fetch(`/api/schedules/${selectedScheduleId}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: currentUser.id }) 
+                    });
+                    if (response.ok) {
+                        alert('삭제되었습니다.');
+                        resetFormToCreateMode();
+                        loadSchedules(); 
+                    } else { alert('삭제 실패'); }
+                } catch (error) { console.error(error); }
+            });
 
-                searchResultList.innerHTML = '';
-                if (groups.length === 0) {
-                    searchResultList.innerHTML = '<li class="text-center text-gray-500 mt-4">검색 결과가 없습니다.</li>';
-                    return;
-                }
-
-                groups.forEach(group => {
-                    const li = document.createElement('li');
-                    li.className = 'bg-white border rounded p-3 shadow-sm hover:shadow-md transition';
-                    li.innerHTML = `
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <div class="font-bold text-indigo-600">${group.name}</div>
-                                <div class="text-xs text-gray-500 mt-1">${group.description || '설명 없음'}</div>
-                                <div class="text-xs text-gray-400 mt-2">방장: ${group.creator_name} | 멤버: ${group.member_count}명</div>
-                            </div>
-                            <button class="btn-join-req bg-indigo-100 text-indigo-700 text-xs px-3 py-1.5 rounded hover:bg-indigo-200 font-bold">
-                                가입 신청
-                            </button>
-                        </div>
-                    `;
-
-                    // 가입 신청 버튼 클릭
-                    li.querySelector('.btn-join-req').addEventListener('click', async () => {
-                        if (!currentUser) return alert('로그인이 필요합니다.');
-                        if (confirm(`'${group.name}' 그룹에 가입 신청하시겠습니까?`)) {
-                            try {
-                                const res = await fetch(`/api/groups/${group.id}/join`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ user_id: currentUser.id })
+            // 캘린더 그리기
+            let currentDate = new Date();
+            const renderCalendar = async () => {
+                calendarGrid.innerHTML = '';
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                monthYearTitle.innerText = `${year}년 ${month + 1}월`;
+                const firstDayIndex = new Date(year, month, 1).getDay();
+                const lastDay = new Date(year, month + 1, 0).getDate();
+                for (let i = 0; i < firstDayIndex; i++) calendarGrid.appendChild(document.createElement('div'));
+                for (let i = 1; i <= lastDay; i++) {
+                    const dateDiv = document.createElement('div');
+                    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                    dateDiv.dataset.date = dateString;
+                    dateDiv.className = 'p-2 border border-gray-200 rounded-md bg-white hover:bg-indigo-50 cursor-pointer h-24 transition flex flex-col justify-between';
+                    dateDiv.innerHTML = `<span class="font-semibold text-gray-700">${i}</span><div id="dots-${dateString}" class="flex gap-1 justify-center text-xs text-red-500"></div>`;
+                    dateDiv.addEventListener('click', () => {
+                        document.getElementById('log-date').value = dateString;
+                        resetFormToCreateMode();
+                        const listContainer = document.getElementById('schedule-list-container');
+                        const listElement = document.getElementById('schedule-list');
+                        const items = dailySchedules[dateString] || [];
+                        if (items.length === 0) listContainer.classList.add('hidden');
+                        else {
+                            listContainer.classList.remove('hidden');
+                            listElement.innerHTML = '';
+                            items.forEach(item => {
+                                const li = document.createElement('li');
+                                li.className = 'p-2 bg-white border border-gray-200 rounded hover:bg-indigo-50 cursor-pointer text-sm truncate';
+                                li.innerText = item.content;
+                                li.addEventListener('click', () => {
+                                    document.getElementById('log-content').value = item.content;
+                                    selectedScheduleId = item.id;
+                                    saveLogBtn.innerText = '수정';
+                                    deleteLogBtn.classList.remove('hidden');
+                                    newEntryBtn.classList.remove('hidden');
                                 });
-                                const data = await res.json();
-                                alert(data.message);
-                            } catch (err) {
-                                console.error(err);
-                                alert('신청 실패');
-                            }
+                                listElement.appendChild(li);
+                            });
                         }
                     });
-
-                    searchResultList.appendChild(li);
-                });
-
-            } catch (error) {
-                console.error('검색 실패:', error);
-            }
-        };
-
-        // 검색 모달 이벤트
-        btnOpenSearch.addEventListener('click', () => {
-            searchModal.classList.remove('hidden');
-            searchInput.value = '';
-            searchResultList.innerHTML = ''; // 초기화
-            searchGroups(); // 열자마자 전체 목록 보여주기
-        });
-
-        btnCloseSearch.addEventListener('click', () => {
-            searchModal.classList.add('hidden');
-        });
-
-        btnSearch.addEventListener('click', searchGroups);
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') searchGroups();
-        });
-
-        // 그룹 삭제 이벤트
-        btnDeleteGroup.addEventListener('click', async () => {
-            if (!currentGroupId) return;
-
-            // 정말 삭제할지 두 번 물어보기
-            if (!confirm('정말 이 스터디 그룹을 삭제하시겠습니까?')) return;
-            if (!confirm('삭제된 데이터는 복구할 수 없습니다. 정말 삭제합니까?')) return;
-
-            try {
-                // 삭제 요청 전송
-                const response = await fetch(`/api/groups/${currentGroupId}`, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: currentUser.id }) // 방장 본인 확인
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    alert(data.message);
-                    
-                    // 정리 및 화면 갱신
-                    groupModal.classList.add('hidden'); // 모달 닫기
-                    currentGroupId = null;
-                    loadGroups(); // 그룹 목록 새로고침 (삭제된 그룹 사라짐)
-                    
-                    // 혹시 캘린더가 남의 거였다면 내 걸로 복귀
-                    loadSchedules(currentUser.id, '나');
-                } else {
-                    alert('삭제 실패: ' + data.message);
+                    calendarGrid.appendChild(dateDiv);
                 }
-            } catch (error) {
-                console.error(error);
-                alert('서버 오류 발생');
-            }
+                try {
+                    const res = await fetch(`/api/holidays?year=${year}&country=KR`);
+                    if (res.ok) {
+                        (await res.json()).forEach(h => {
+                            const d = document.querySelector(`div[data-date="${h.date}"]`);
+                            if(d) {
+                                d.querySelector('span').classList.add('text-red-500');
+                                if(!d.querySelector('.holiday-name')) d.innerHTML += `<div class="holiday-name text-xs text-red-500 mt-1 truncate font-bold">${h.name}</div>`;
+                            }
+                        });
+                    }
+                } catch(e) {}
+                if (currentUser) await loadSchedules(); 
+            };
+            
+            prevBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
+            nextBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
+
+            // 초기 실행
+            renderCalendar();
+
         });
     </script>
 
