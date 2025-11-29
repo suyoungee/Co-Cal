@@ -1,5 +1,4 @@
 // config/init-db.js
-// 자동으로 테이블 생성 -> 쿼리 입력 불필요
 const db = require('./database');
 
 const initQuery = `
@@ -43,18 +42,7 @@ const initQuery = `
         UNIQUE KEY (group_id, user_id)
     );
 
-    -- 5. 시간표 테이블
-    CREATE TABLE IF NOT EXISTS study_timetable (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        group_id INT NOT NULL,
-        user_id INT NOT NULL,
-        day_of_week TINYINT NOT NULL,
-        block TINYINT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE KEY uniq_slot (group_id, user_id, day_of_week, block)
-    );    
-
-    -- 6. 그룹 가입 신청 테이블 (대기열)
+    -- 5. 가입 신청 테이블
     CREATE TABLE IF NOT EXISTS group_join_requests (
         id INT AUTO_INCREMENT PRIMARY KEY,
         group_id INT NOT NULL,
@@ -62,15 +50,26 @@ const initQuery = `
         requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (group_id) REFERENCES study_groups(id) ON DELETE CASCADE,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        UNIQUE KEY uniq_req (group_id, user_id) -- 중복 신청 방지
+        UNIQUE KEY uniq_req (group_id, user_id)
+    );
+
+    -- 6. 스터디 시간표 테이블
+    CREATE TABLE IF NOT EXISTS study_timetable (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        group_id INT NOT NULL,
+        user_id INT NOT NULL,
+        day_of_week TINYINT NOT NULL,
+        block TINYINT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_slot (group_id, user_id, day_of_week, block),
+        FOREIGN KEY (group_id) REFERENCES study_groups(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
 `;
 
 const initDB = async () => {
     try {
-        // 세미콜론(;) 기준으로 쿼리 여러 개를 쪼개서 실행
         const queries = initQuery.split(';').filter(q => q.trim());
-        
         for (const query of queries) {
             await db.query(query);
         }

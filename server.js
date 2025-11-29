@@ -9,8 +9,8 @@ const authRoutes = require('./routes/auth');
 const scheduleRoutes = require('./routes/schedule');
 const holidayRoutes = require('./routes/holiday');
 const groupRoutes = require('./routes/groups');
-
-
+const timetableRoutes = require('./routes/timetable');
+const userRouter = require('./routes/user');
 
 // 설정: 서버 포트 번호 (3000번)
 const PORT = 3000;
@@ -27,6 +27,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/holidays', holidayRoutes);
 app.use('/api/groups', groupRoutes);
+app.use('/api/timetable', timetableRoutes);
+app.use('/api/user', userRouter);
 
 // 기본 경로('/')로 접속했을 때 index.html 보내주기
 app.get('/', (req, res) => {
