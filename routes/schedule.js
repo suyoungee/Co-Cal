@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../config/database');
 
 // --- 일정 저장 API (POST /api/schedules) ---
+// (기존과 동일: 글 쓸 때는 작성자 정보가 필요함)
 router.post('/', async (req, res) => {
     const { user_id, date, content } = req.body;
 
@@ -24,56 +25,65 @@ router.post('/', async (req, res) => {
     }
 });
 
-// --- 일정 조회 API (GET /api/schedules?user_id=1) ---
-// --- 일정 조회 API (수정됨: 개인 또는 그룹 일정 조회) ---
+// --- 일정 조회 API (GET /api/schedules) ---
+// (수정됨: group_id가 있으면 그룹 전체 조회, user_id만 있으면 개인 조회)
 router.get('/', async (req, res) => {
-    // 프론트엔드에서 보낸 user_id 또는 group_id를 받습니다.
-    const { user_id, group_id } = req.query;
+    const { user_id, group_id } = req.query; 
+
+    // ID 정보가 하나도 없으면 에러 처리
+    if (!user_id && !group_id) {
+        return res.status(400).json({ message: '조회할 ID 정보가 필요합니다.' });
+    }
 
     try {
-        let query;
-        let params = [];
+        let rows = [];
 
-        // 상황 1: 그룹 버튼을 눌러서 'group_id'가 들어온 경우
         if (group_id) {
-            // 1-1. 그 그룹에 속한 멤버들의 ID를 먼저 다 찾습니다.
+            // [CASE 1] 그룹 조회: 그룹 멤버들의 ID를 먼저 찾고 -> 그들의 일정을 모두 가져옴
             const [members] = await db.query('SELECT user_id FROM group_members WHERE group_id = ?', [group_id]);
             
-            // 멤버가 한 명도 없으면 빈 배열 반환
-            if (members.length === 0) return res.json([]);
-
-            // 1-2. 멤버들의 ID만 뽑아서 리스트로 만듭니다. (예: [1, 3, 5])
-            const memberIds = members.map(m => m.user_id);
-
-            // 1-3. 그 멤버들이 쓴 일정을 모두 가져옵니다. (SQL의 IN 문법 사용)
-            // 물음표(?)를 멤버 수만큼 만듭니다.
-            const placeholders = memberIds.map(() => '?').join(', ');
-            
-            query = `
-                SELECT s.id, s.date, s.content, s.user_id, u.name as user_name
-                FROM schedules s
-                JOIN users u ON s.user_id = u.id
-                WHERE s.user_id IN (${placeholders})
-                ORDER BY s.date ASC
-            `;
-            params = memberIds; 
-        } 
-        // 상황 2: 그냥 내 캘린더라서 'user_id'만 들어온 경우
-        else if (user_id) {
-            query = `
-                SELECT s.id, s.date, s.content, s.user_id, u.name as user_name
+            if (members.length > 0) {
+                const memberIds = members.map(m => m.user_id);
+                // IN 절을 위한 물음표 생성 (?, ?, ?)
+                const placeholders = memberIds.map(() => '?').join(', ');
+                
+                // 멤버들의 일정 + 작성자 이름(u.name)까지 조인해서 가져옴
+                const query = `
+                    SELECT s.*, u.name as user_name 
+                    FROM schedules s
+                    JOIN users u ON s.user_id = u.id
+                    WHERE s.user_id IN (${placeholders})
+                `;
+                const [result] = await db.query(query, memberIds);
+                rows = result;
+            }
+        } else {
+            // [CASE 2] 개인 조회: 기존 로직 유지 (이름 정보도 통일성을 위해 JOIN 추가)
+            const query = `
+                SELECT s.*, u.name as user_name 
                 FROM schedules s
                 JOIN users u ON s.user_id = u.id
                 WHERE s.user_id = ?
-                ORDER BY s.date ASC
             `;
-            params = [user_id];
-        } else {
-            return res.status(400).json({ message: '사용자 ID 또는 그룹 ID가 필요합니다.' });
+            const [result] = await db.query(query, [user_id]);
+            rows = result;
         }
 
-        const [rows] = await db.query(query, params);
-        res.json(rows);
+        // 보내주신 날짜 포맷 변환 로직 유지
+        const schedules = rows.map(row => {
+            const d = new Date(row.date);
+            // UTC 변환 없이, 현재 시스템(한국) 시간 기준으로 연/월/일 추출
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            
+            return {
+                ...row,
+                date: `${year}-${month}-${day}` // "YYYY-MM-DD" 형태로 조합
+            };
+        });
+
+        res.json(schedules);
 
     } catch (error) {
         console.error('일정 조회 에러:', error);
@@ -82,17 +92,18 @@ router.get('/', async (req, res) => {
 });
 
 // --- 일정 수정 API (PUT /api/schedules/:id) ---
+// (수정됨: 본인 확인 로직 제거 -> 그룹원 누구나 수정 가능)
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
-    const { content, user_id } = req.body; // user_id는 본인 글인지 확인용
+    const { content } = req.body; 
 
     try {
-        // 내 글이 맞는지 확인하고 내용 수정
-        const query = 'UPDATE schedules SET content = ? WHERE id = ? AND user_id = ?';
-        const [result] = await db.query(query, [content, id, user_id]);
+        // [변경] AND user_id = ? 부분을 제거했습니다. (ID만 맞으면 수정 가능)
+        const query = 'UPDATE schedules SET content = ? WHERE id = ?';
+        const [result] = await db.query(query, [content, id]);
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: '일정을 찾을 수 없거나 수정 권한이 없습니다.' });
+            return res.status(404).json({ message: '일정을 찾을 수 없습니다.' });
         }
 
         res.json({ message: '일정이 수정되었습니다.' });
@@ -103,17 +114,17 @@ router.put('/:id', async (req, res) => {
 });
 
 // --- 일정 삭제 API (DELETE /api/schedules/:id) ---
+// (수정됨: 본인 확인 로직 제거 -> 그룹원 누구나 삭제 가능)
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
-    // user_id는 쿼리스트링이나 바디로 받아서 검증해야 안전함 (여기선 간단히 구현)
-    const { user_id } = req.body; 
-
+    
     try {
-        const query = 'DELETE FROM schedules WHERE id = ? AND user_id = ?';
-        const [result] = await db.query(query, [id, user_id]);
+        // [변경] AND user_id = ? 부분을 제거했습니다. (ID만 맞으면 삭제 가능)
+        const query = 'DELETE FROM schedules WHERE id = ?';
+        const [result] = await db.query(query, [id]);
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: '일정을 찾을 수 없거나 삭제 권한이 없습니다.' });
+            return res.status(404).json({ message: '일정을 찾을 수 없습니다.' });
         }
 
         res.json({ message: '일정이 삭제되었습니다.' });

@@ -145,6 +145,7 @@
                                     <button id="btn-new-entry" class="hidden w-full mt-2 text-xs text-indigo-600 hover:text-indigo-800 underline text-right">+ 새 기록 작성하기 (수정 취소)</button>
                                 </div>
                                 <label for="log-content" class="block text-sm font-medium text-gray-700">내용 작성</label>
+                                <div id="schedule-list" class="mb-4 space-y-2 max-h-40 overflow-y-auto"></div>
                                 <textarea id="log-content" rows="5" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="오늘 공부한 내용을 기록하세요..."></textarea>
                                 <div class="flex gap-2 mt-4">
                                     <button id="save-log" class="flex-1 px-4 py-2 font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700">기록 저장</button>
@@ -234,8 +235,9 @@
     <script>
         // --- 1. 전역 변수 ---
         let currentUser = null; 
-        let currentGroupId = null; // (현재 선택된 그룹 ID 저장용)
-
+        let currentGroupId = null; // [추가]
+        let allSchedules = [];     // [추가]
+        
         // 시간표용 상수
         const DAYS = [
             { label: '일', value: 0 }, { label: '월', value: 1 }, { label: '화', value: 2 },
@@ -344,52 +346,108 @@
             };
 
             // [일정] 불러오기
-            const loadSchedules = async () => {
+            const loadSchedules = async (targetUserId = currentUser.id, targetUserName = '나') => {
                 // 1. 로그인 안 했으면 중단
                 if (!currentUser) return;
-
-                // 2. 기존에 찍힌 점들(일정 표시) 지우기 (중복 표시 방지)
-                document.querySelectorAll('.schedule-dot').forEach(el => el.remove());
+                
+                // 2. 초기화 (변수 및 점 지우기)
+                // (주의: dailySchedules, allSchedules 중 사용하시는 변수명에 맞춰 저장됩니다)
+                dailySchedules = {}; 
+                allSchedules = []; 
+                document.querySelectorAll('[id^="dots-"]').forEach(el => el.innerHTML = '');
 
                 try {
                     let url;
+                    // ★ [핵심 1] 그룹 모드인지 확인
+                    const isGroupMode = (currentGroupId !== null);
 
-                    // ★ 여기가 핵심 변경 사항입니다 ★
-                    // 전역 변수 currentGroupId에 값이 있으면 '그룹 일정'을, 없으면 '내 일정'을 요청
-                    if (currentGroupId) {
+                    // URL 결정: 그룹이면 그룹ID로, 아니면 유저ID로
+                    if (isGroupMode) {
                         url = `/api/schedules?group_id=${currentGroupId}`;
                     } else {
-                        url = `/api/schedules?user_id=${currentUser.id}`;
+                        url = `/api/schedules?user_id=${targetUserId}`;
                     }
 
-                    const res = await fetch(url);
+                    const response = await fetch(url);
+                    const schedules = await response.json();
                     
-                    if (res.ok) {
-                        const schedules = await res.json();
+                    // 데이터 저장 (리스트 출력용)
+                    allSchedules = schedules; 
 
-                        // 3. 가져온 일정들을 달력 날짜에 점으로 표시
-                        schedules.forEach(schedule => {
-                            // 날짜 문자열(YYYY-MM-DD)만 추출
-                            const dateStr = schedule.date.split('T')[0];
-                            
-                            // 해당 날짜 칸(div) 찾기
-                            const dayDiv = document.querySelector(`div[data-date="${dateStr}"]`);
-                            
-                            if (dayDiv) {
-                                // 점(Dot) 만들기
-                                const dot = document.createElement('div');
-                                // 파란색 점 스타일 (Tailwind CSS)
-                                dot.className = 'schedule-dot w-2 h-2 bg-blue-500 rounded-full mx-auto mt-1';
-                                
-                                // 마우스 올리면 "작성자: 내용"이 보이도록 툴팁 설정
-                                dot.title = `${schedule.user_name || '익명'}: ${schedule.content}`;
-                                
-                                dayDiv.appendChild(dot);
-                            }
-                        });
+                    // ★ [핵심 2] 편집 권한 판단 (isMe)
+                    // 기존: 내 ID랑 같아야만 수정 가능
+                    // 변경: 내 ID랑 같거나, OR "그룹 모드"이면 무조건 수정 가능(True)
+                    const canEdit = isGroupMode || (targetUserId === currentUser.id);
+                    
+                    // 그룹이면 파란점, 내 개인 달력이면 빨간점
+                    const dotColorClass = isGroupMode ? 'bg-blue-500' : 'bg-red-500';
+
+                    // 3. 데이터 가공 및 점 찍기 (보내주신 로직 유지)
+                    schedules.forEach(schedule => {
+                        // dailySchedules에 저장 (날짜별 분류)
+                        if (!dailySchedules[schedule.date]) dailySchedules[schedule.date] = [];
+                        dailySchedules[schedule.date].push(schedule);
+                        
+                        // 점 찍기
+                        // (날짜 형식이 YYYY-MM-DD인지 확인 필요, 만약 T가 들어있다면 split 처리)
+                        const dateStr = schedule.date.includes('T') ? schedule.date.split('T')[0] : schedule.date;
+                        const dotContainer = document.getElementById(`dots-${dateStr}`);
+                        
+                        if (dotContainer) {
+                            // 점이 너무 많아지지 않게 체크하거나, 그냥 추가 (기존 로직 따름)
+                            const dot = document.createElement('div');
+                            dot.className = `w-2 h-2 ${dotColorClass} rounded-full schedule-dot`; 
+                            dotContainer.appendChild(dot);
+                        }
+                    });
+
+                    // 4. 날짜 선택 상태 유지 및 리스트 갱신
+                    const currentDateVal = document.getElementById('log-date').value;
+                    
+                    // 권한이 있으면(내 거거나 그룹이거나) 리스트 보여주기
+                    if (currentDateVal && canEdit) {
+                        // ★ renderScheduleList 함수가 있다면 호출
+                        if (typeof renderScheduleList === 'function') {
+                            renderScheduleList(currentDateVal);
+                        }
                     }
-                } catch (error) {
-                    console.error("일정 로딩 실패:", error);
+
+                    // 5. UI 상태 변경 (입력창, 버튼 등)
+                    const textArea = document.getElementById('log-content');
+                    
+                    // 버튼 변수들이 전역에 있다고 가정 (없으면 document.getElementById로 찾아야 함)
+                    // 혹시 에러나면 const saveLogBtn = document.getElementById('save-log-btn'); 등을 추가하세요.
+
+                    if (!canEdit) {
+                        // [남의 개인 캘린더 볼 때] -> 보기 전용 (Disabled)
+                        textArea.placeholder = `${targetUserName}님의 공부 기록입니다. (보기 전용)`;
+                        textArea.disabled = true;
+                        if(typeof saveLogBtn !== 'undefined') saveLogBtn.classList.add('hidden');
+                        if(typeof deleteLogBtn !== 'undefined') deleteLogBtn.classList.add('hidden');
+                        if(typeof newEntryBtn !== 'undefined') newEntryBtn.classList.add('hidden');
+                        if(typeof backBtn !== 'undefined') backBtn.classList.remove('hidden'); // 돌아가기 버튼 보임
+                        if(typeof scheduleListContainer !== 'undefined') scheduleListContainer.classList.add('hidden');
+
+                    } else {
+                        // [내 캘린더] 또는 [그룹 캘린더] -> 편집 가능 (Enabled)
+                        if (isGroupMode) {
+                            textArea.placeholder = "그룹원들과 공유할 학습 내용을 입력하세요...";
+                            // 그룹 모드일 때 '돌아가기' 버튼이 필요하면 remove('hidden') 하세요.
+                        } else {
+                            textArea.placeholder = "오늘 공부한 내용을 기록하세요...";
+                            if(typeof backBtn !== 'undefined') backBtn.classList.add('hidden');
+                        }
+                        
+                        textArea.disabled = false;
+                        
+                        if(typeof saveLogBtn !== 'undefined') saveLogBtn.classList.remove('hidden');
+                        // 그룹 모드에서도 삭제/새글 버튼 등이 보이길 원하면 remove('hidden')
+                        if(typeof deleteLogBtn !== 'undefined') deleteLogBtn.classList.remove('hidden'); 
+                        if(typeof newEntryBtn !== 'undefined') newEntryBtn.classList.remove('hidden');
+                    }
+
+                } catch (error) { 
+                    console.error('일정 로드 실패:', error); 
                 }
             };
 
