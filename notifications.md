@@ -16,6 +16,7 @@ DB_HOST=localhost
 DB_USER=cocal_user
 DB_PASSWORD=Cocal@2025
 DB_NAME=cocal_db
+CALENDARIFIC_API_KEY= 자기 자신의 api key값
 ```
 ### 3. 데이터베이스(MySQL) 세팅
 - 로컬 PC에 똑같은 DB와 테이블이 있어야 서버가 돌아갑니다.
