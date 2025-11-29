@@ -273,7 +273,6 @@
             const deleteLogBtn = document.getElementById('delete-log');
             const newEntryBtn = document.getElementById('btn-new-entry');
             const backBtn = document.getElementById('btn-back-to-my');
-            // 리스트 컨테이너 DOM 추가 확보
             const scheduleListContainer = document.getElementById('schedule-list-container');
             const scheduleListUl = document.getElementById('schedule-list');
 
@@ -310,40 +309,31 @@
 
             // --- [함수 정의] ---
 
-            // ★ [핵심 수정] 리스트 그리기 함수 분리 (재사용 위해)
+            // 리스트 그리기 함수 (UI 갱신용)
             const renderScheduleList = (dateString) => {
                 const items = dailySchedules[dateString] || [];
-                
-                // 데이터가 없으면 리스트 숨김
                 if (items.length === 0) {
                     scheduleListContainer.classList.add('hidden');
                     return;
                 }
-
-                // 데이터가 있으면 리스트 표시 및 생성
                 scheduleListContainer.classList.remove('hidden');
-                scheduleListUl.innerHTML = ''; // 기존 목록 비우기
+                scheduleListUl.innerHTML = ''; 
 
                 items.forEach(item => {
                     const li = document.createElement('li');
                     li.className = 'p-2 bg-white border border-gray-200 rounded hover:bg-indigo-50 cursor-pointer text-sm truncate';
-                    li.innerText = item.content; // 내용 일부 보여주기
-                    
-                    // 리스트 아이템 클릭 시 -> 수정 모드로 진입
+                    li.innerText = item.content; 
                     li.addEventListener('click', () => {
                         document.getElementById('log-content').value = item.content;
                         selectedScheduleId = item.id;
-                        
                         saveLogBtn.innerText = '수정';
                         deleteLogBtn.classList.remove('hidden');
                         newEntryBtn.classList.remove('hidden');
                     });
-
                     scheduleListUl.appendChild(li);
                 });
             };
 
-            // ★ [핵심 수정] 입력폼 초기화 헬퍼 함수
             const resetFormToCreateMode = () => {
                 document.getElementById('log-content').value = '';
                 selectedScheduleId = null;
@@ -352,7 +342,7 @@
                 newEntryBtn.classList.add('hidden');
             };
 
-            // [일정] 불러오기 (fetch 후 리스트도 갱신하도록 수정)
+            // [일정] 불러오기
             const loadSchedules = async (targetUserId = currentUser.id, targetUserName = '나') => {
                 if (!targetUserId) return;
                 dailySchedules = {}; 
@@ -367,7 +357,6 @@
                     schedules.forEach(schedule => {
                         if (!dailySchedules[schedule.date]) dailySchedules[schedule.date] = [];
                         dailySchedules[schedule.date].push(schedule);
-                        
                         const dotContainer = document.getElementById(`dots-${schedule.date}`);
                         if (dotContainer) {
                             const dot = document.createElement('div');
@@ -376,15 +365,12 @@
                         }
                     });
 
-                    // ★ 현재 선택된 날짜가 있다면 리스트도 즉시 갱신 (저장/삭제 직후 반영 위해)
+                    // 날짜 선택 상태 유지 및 리스트 갱신
                     const currentDateVal = document.getElementById('log-date').value;
                     if(currentDateVal && isMe) {
                         renderScheduleList(currentDateVal);
-                    } else if (!isMe) {
-                        // 남의 캘린더 볼 때는 리스트 숨기거나 보기 전용 처리 (여기선 일단 숨김 해제 안함)
                     }
 
-                    // 입력창 상태 관리
                     const textArea = document.getElementById('log-content');
                     if (!isMe) {
                         textArea.placeholder = `${targetUserName}님의 공부 기록입니다. (보기 전용)`;
@@ -393,7 +379,7 @@
                         deleteLogBtn.classList.add('hidden');
                         newEntryBtn.classList.add('hidden');
                         backBtn.classList.remove('hidden');
-                        scheduleListContainer.classList.add('hidden'); // 남의 일정 상세 리스트는 일단 숨김
+                        scheduleListContainer.classList.add('hidden'); 
                     } else {
                         textArea.placeholder = "오늘 공부한 내용을 기록하세요...";
                         textArea.disabled = false;
@@ -403,57 +389,7 @@
                 } catch (error) { console.error('일정 로드 실패:', error); }
             };
 
-            // [일정] 저장/수정 로직 (저장 후 화면 갱신 추가)
-            saveLogBtn.addEventListener('click', async () => {
-                if (!currentUser) return alert('로그인이 필요합니다.');
-                const date = document.getElementById('log-date').value;
-                const content = document.getElementById('log-content').value;
-                if (!date) return alert('날짜를 선택해주세요.');
-                if (!content.trim()) return alert('내용을 입력해주세요.');
-
-                const method = selectedScheduleId ? 'PUT' : 'POST';
-                const url = selectedScheduleId ? `/api/schedules/${selectedScheduleId}` : '/api/schedules';
-                
-                try {
-                    const response = await fetch(url, {
-                        method: method,
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user_id: currentUser.id, date, content }),
-                    });
-                    if (response.ok) { 
-                        alert(selectedScheduleId ? '수정되었습니다!' : '저장되었습니다!');
-                        resetFormToCreateMode(); 
-                        await loadSchedules(); // 데이터 다시 불러오고 리스트 갱신
-                    } else {
-                        alert('실패: ' + (await response.json()).message);
-                    }
-                } catch(e) { console.error(e); }
-            });
-
-            // [일정] 삭제 로직 (삭제 후 화면 갱신 추가)
-            deleteLogBtn.addEventListener('click', async () => {
-                if(!selectedScheduleId || !confirm('정말 삭제하시겠습니까?')) return;
-                try {
-                    const response = await fetch(`/api/schedules/${selectedScheduleId}`, {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user_id: currentUser.id }) 
-                    });
-                    if (response.ok) { 
-                        alert('삭제되었습니다.'); 
-                        resetFormToCreateMode(); 
-                        await loadSchedules(); // 데이터 다시 불러오고 리스트 갱신 (삭제된 항목 사라짐)
-                    } else {
-                        alert('실패: ' + (await response.json()).message);
-                    }
-                } catch(e) { console.error(e); }
-            });
-
-            // 새 글 쓰기 버튼
-            newEntryBtn.addEventListener('click', () => resetFormToCreateMode());
-
-
-            // [그룹] 목록 로드
+            // [그룹] 목록 로드 (자동선택 포함)
             const loadGroups = async () => {
                 if (!currentUser) return;
                 try {
@@ -602,11 +538,14 @@
                 btnMyTimetable.classList.remove('bg-indigo-600', 'text-white');
             };
 
-            // [그룹] 상세 모달
+            // [그룹] 상세 모달 열기
             const openGroupModal = async (groupId, groupName, createdBy) => {
                 modalGroupName.innerText = groupName;
                 groupModal.classList.remove('hidden');
-                loadGroupMembers(groupId);
+
+                // 방장 정보 넘겨서 멤버 로드 (추방/탈퇴 버튼용)
+                loadGroupMembers(groupId, createdBy);
+
                 if (currentUser.id === createdBy) {
                     if(leaderSection) leaderSection.classList.remove('hidden');
                     if(leaderDeleteSection) leaderDeleteSection.classList.remove('hidden');
@@ -617,28 +556,87 @@
                 }
             };
 
-            // [그룹] 멤버 로드
-            const loadGroupMembers = async (groupId) => {
+            // [그룹] 멤버 목록 로드 (탈퇴/추방/나 표시 복구)
+            const loadGroupMembers = async (groupId, groupCreatorId) => {
                 try {
                     const response = await fetch(`/api/groups/${groupId}/members`);
                     const members = await response.json();
                     modalMemberList.innerHTML = ''; 
+                    
                     members.forEach(member => {
                         const li = document.createElement('li');
                         li.className = 'flex justify-between items-center text-sm p-2 border-b border-gray-100 cursor-pointer hover:bg-gray-100 transition';
-                        let isMe = '';
-                        if (currentUser && currentUser.id === member.id) isMe = '<span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-1 rounded ml-2">나</span>';
-                        li.innerHTML = `<div class="flex items-center"><span class="font-medium text-gray-800">${member.name}</span><span class="text-xs text-gray-400 ml-2">(${member.email})</span></div>${isMe}`;
-                        li.addEventListener('click', () => {
+                        
+                        // 1. 왼쪽: 이름 및 정보
+                        const leftDiv = document.createElement('div');
+                        leftDiv.className = 'flex items-center';
+                        let nameHTML = `<span class="font-medium text-gray-800">${member.name}</span> <span class="text-xs text-gray-400 ml-1">(${member.email})</span>`;
+                        
+                        if (currentUser.id === member.id) nameHTML += `<span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1 rounded ml-1">나</span>`;
+                        if (member.id === groupCreatorId) nameHTML += `<span class="text-[10px] ml-1">👑</span>`;
+                        leftDiv.innerHTML = nameHTML;
+
+                        leftDiv.addEventListener('click', (e) => {
+                            e.stopPropagation();
                             loadSchedules(member.id, member.name); 
                             groupModal.classList.add('hidden');
                             alert(`${member.name}님의 캘린더로 전환되었습니다.`);
                         });
+
+                        // 2. 오른쪽: 관리 버튼 (탈퇴/추방)
+                        const btnDiv = document.createElement('div');
+                        
+                        // A. 방장이 멤버 추방
+                        if (currentUser.id === groupCreatorId && member.id !== groupCreatorId) {
+                            const kickBtn = document.createElement('button');
+                            kickBtn.className = 'text-[10px] bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200 ml-2';
+                            kickBtn.innerText = '추방';
+                            kickBtn.onclick = (e) => { e.stopPropagation(); removeMember(groupId, member.id, 'kick'); };
+                            btnDiv.appendChild(kickBtn);
+                        }
+                        // B. 본인 탈퇴
+                        if (currentUser.id === member.id && currentUser.id !== groupCreatorId) {
+                            const leaveBtn = document.createElement('button');
+                            leaveBtn.className = 'text-[10px] bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 ml-2';
+                            leaveBtn.innerText = '나가기';
+                            leaveBtn.onclick = (e) => { e.stopPropagation(); removeMember(groupId, member.id, 'leave'); };
+                            btnDiv.appendChild(leaveBtn);
+                        }
+
+                        li.appendChild(leftDiv);
+                        li.appendChild(btnDiv);
                         modalMemberList.appendChild(li); 
                     });
                 } catch (error) { console.error('멤버 로드 실패:', error); }
             };
 
+            // 멤버 탈퇴/추방 처리 함수
+            const removeMember = async (groupId, targetMemberId, type) => {
+                const confirmMsg = type === 'leave' ? '정말 그룹을 탈퇴하시겠습니까?' : '정말 이 멤버를 추방하시겠습니까?';
+                if (!confirm(confirmMsg)) return;
+
+                try {
+                    const response = await fetch(`/api/groups/${groupId}/members/${targetMemberId}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ requesterId: currentUser.id })
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        alert(data.message);
+                        if (type === 'leave') {
+                            groupModal.classList.add('hidden');
+                            loadGroups();
+                            loadSchedules(currentUser.id, '나');
+                        } else {
+                            // 추방은 목록만 갱신 (방장 ID 필요하므로 UI 리로드 대신 currentUser 사용)
+                            loadGroupMembers(groupId, currentUser.id); 
+                        }
+                    } else { alert('실패: ' + data.message); }
+                } catch (error) { console.error(error); alert('오류 발생'); }
+            };
+
+            // [그룹] 신청/승인
             const loadJoinRequests = async (groupId) => {
                 try {
                     const response = await fetch(`/api/groups/${groupId}/requests`);
@@ -668,11 +666,12 @@
                         body: JSON.stringify({ action })
                     });
                     const data = await response.json();
-                    if (response.ok) { alert(data.message); loadJoinRequests(groupId); loadGroupMembers(groupId); } 
+                    if (response.ok) { alert(data.message); loadJoinRequests(groupId); loadGroupMembers(groupId, currentUser.id); } 
                     else { alert('오류: ' + data.message); }
                 } catch (error) { console.error(error); }
             };
 
+            // [그룹] 검색
             const searchGroups = async () => {
                 const keyword = searchInput.value.trim();
                 try {
@@ -729,7 +728,7 @@
                         renderCalendar();
                         renderTimetableUI(); 
                         await loadGroups(); 
-                        document.querySelector('header span').innerText = `ID: ${data.user.name}`;
+                        document.querySelector('header span').innerText = `로그인: ${data.user.name}`;
                         loginPage.classList.add('hidden');
                         mainPage.classList.remove('hidden');
                     } else { alert('실패: ' + data.message); }
@@ -806,14 +805,14 @@
                         body: JSON.stringify({ email })
                     });
                     const data = await response.json();
-                    if (response.ok) { alert('초대되었습니다!'); document.getElementById('invite-email').value = ''; loadGroupMembers(currentGroupId); }
+                    if (response.ok) { alert('초대되었습니다!'); document.getElementById('invite-email').value = ''; loadGroupMembers(currentGroupId, currentUser.id); }
                     else { alert('실패: ' + data.message); }
                 } catch (error) { console.error(error); }
             });
 
             if (btnDeleteGroup) {
                 btnDeleteGroup.addEventListener('click', async () => {
-                    if (!currentGroupId || !confirm('정말 삭제하시겠습니까?')) return;
+                    if (!currentGroupId || !confirm('정말 이 스터디 그룹을 삭제하시겠습니까?')) return;
                     try {
                         const response = await fetch(`/api/groups/${currentGroupId}`, {
                             method: 'DELETE',
@@ -865,6 +864,36 @@
                 } catch (e) { console.error(e); }
             });
 
+            // 일정 CRUD
+            newEntryBtn.addEventListener('click', () => resetFormToCreateMode());
+            saveLogBtn.addEventListener('click', async () => {
+                if (!currentUser) return alert('로그인 필요');
+                const date = document.getElementById('log-date').value;
+                const content = document.getElementById('log-content').value;
+                const method = selectedScheduleId ? 'PUT' : 'POST';
+                const url = selectedScheduleId ? `/api/schedules/${selectedScheduleId}` : '/api/schedules';
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: currentUser.id, date, content }),
+                    });
+                    if (response.ok) { alert('저장되었습니다.'); resetFormToCreateMode(); loadSchedules(); }
+                } catch(e) {}
+            });
+            deleteLogBtn.addEventListener('click', async () => {
+                if(!selectedScheduleId || !confirm('삭제하시겠습니까?')) return;
+                try {
+                    const response = await fetch(`/api/schedules/${selectedScheduleId}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: currentUser.id }) 
+                    });
+                    if (response.ok) { alert('삭제되었습니다.'); resetFormToCreateMode(); loadSchedules(); }
+                } catch(e) {}
+            });
+
+            // 캘린더 초기 렌더링
             let currentDate = new Date();
             const renderCalendar = async () => {
                 calendarGrid.innerHTML = '';
@@ -880,12 +909,10 @@
                     dateDiv.dataset.date = dateString;
                     dateDiv.className = 'p-2 border border-gray-200 rounded-md bg-white hover:bg-indigo-50 cursor-pointer h-24 transition flex flex-col justify-between';
                     dateDiv.innerHTML = `<span class="font-semibold text-gray-700">${i}</span><div id="dots-${dateString}" class="flex gap-1 justify-center text-xs text-red-500"></div>`;
-                    
-                    // ★ [수정] 날짜 클릭 시 리스트 렌더링 호출
                     dateDiv.addEventListener('click', () => {
                         document.getElementById('log-date').value = dateString;
-                        resetFormToCreateMode(); // 항상 등록 모드로 시작
-                        renderScheduleList(dateString); // 리스트 그리기
+                        resetFormToCreateMode();
+                        renderScheduleList(dateString);
                     });
                     calendarGrid.appendChild(dateDiv);
                 }
