@@ -1,4 +1,4 @@
-// config/init-db.js
+
 const db = require('./database');
 
 const initQuery = `
@@ -68,37 +68,30 @@ const initQuery = `
 `;
 
 
-// 2. 샘플 데이터 삽입 함수
 const seedData = async () => {
     try {
-        // (1) 테스트 계정 생성
+        // 방장 계정 생성
         await db.query(`
             INSERT IGNORE INTO users (id, email, password, name) 
-            VALUES (1, 'test@cocal.com', '1234', '테스트 유저');
+            VALUES (1, 'leader@cocal.com', '1234', '방장');
         `);
 
-        // (2) 팀원 계정 생성
+        // 팀원 계정 생성
         await db.query(`
             INSERT IGNORE INTO users (id, email, password, name) 
             VALUES (2, 'coworker@cocal.com', '1234', '팀원');
         `);
 
-        // (3) 샘플 스터디 그룹 생성
+        // 샘플 스터디 그룹 생성
         await db.query(`
             INSERT IGNORE INTO study_groups (id, name, description, created_by) 
-            VALUES (1, '2025 웹응용프로그래밍 스터디', '기말고사 대비 스터디', 1), (2, '겨울방학 웹개발 프로젝트', '겨울방학 때 프로젝트 하나 진행하실 분', 1);
+            VALUES (1, '웹응용프로그래밍 스터디', '기말고사 대비 스터디', 1), (2, '겨울방학 웹개발 프로젝트', '겨울방학 때 프로젝트 하나 진행하실 분', 1);
         `);
 
-        // (4) 그룹 멤버 연결 (테스트유저를 그룹 1, 2에 가입)
+        // 그룹 멤버 연결 (방장을 그룹 1, 2에 가입)
         await db.query(`
             INSERT IGNORE INTO group_members (group_id, user_id) 
             VALUES (1, 1), (2, 1);
-        `);
-
-        // (5) 샘플 일정 추가
-        await db.query(`
-            INSERT IGNORE INTO schedules (user_id, date, content) 
-            VALUES (1, CURDATE(), '테스트유저의 학습기록입니다.');
         `);
 
         console.log('샘플 데이터(Seeding) 로드 완료');
