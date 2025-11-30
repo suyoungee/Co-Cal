@@ -5,17 +5,17 @@ const db = require('../config/database');
 
 // 일정 저장 API
 router.post('/', async (req, res) => {
-    const { user_id, date, content } = req.body;
+    const { user_id, date, content, group_id } = req.body;
 
     // 데이터 검증
-    if (!user_id || !date || !content) {
+    if (!user_id || !group_id || !date || !content ) {
         return res.status(400).json({ message: '날짜와 내용을 모두 입력해주세요.' });
     }
 
     try {
         // DB에 저장
-        const query = 'INSERT INTO schedules (user_id, date, content) VALUES (?, ?, ?)';
-        await db.query(query, [user_id, date, content]);
+        const query = 'INSERT INTO schedules (user_id, group_id, date, content) VALUES (?, ?, ?, ?)';
+        await db.query(query, [user_id, group_id, date, content]);
 
         res.status(201).json({ message: '일정이 저장되었습니다!' });
 
@@ -29,25 +29,36 @@ router.post('/', async (req, res) => {
 router.get('/', async (req, res) => {
     const { user_id, group_id } = req.query;
 
+    // group_id는 모든 조회에서 필수
+    if (!group_id) {
+        return res.status(400).json({ message: 'group_id는 필수입니다.' });
+    }
+
     try {
         let query = '';
         let params = [];
 
-        if (group_id) {
+        // 1) 내 캘린더: user_id + group_id 둘 다 있을 때
+        if (user_id) {
             query = `
-                SELECT s.id, s.user_id, s.date, s.content, u.name as user_name
+                SELECT s.id, s.user_id, s.group_id, s.date, s.content, u.name as user_name
                 FROM schedules s
                 JOIN users u ON s.user_id = u.id
-                JOIN group_members gm ON s.user_id = gm.user_id
-                WHERE gm.group_id = ?
+                WHERE s.group_id = ? AND s.user_id = ?
+                ORDER BY s.date DESC
+            `;
+            params = [group_id, user_id];
+
+        // 2) 그룹 캘린더: group_id만 있을 때 (전체 일정)
+        } else {
+            query = `
+                SELECT s.id, s.user_id, s.group_id, s.date, s.content, u.name as user_name
+                FROM schedules s
+                JOIN users u ON s.user_id = u.id
+                WHERE s.group_id = ?
+                ORDER BY s.date DESC
             `;
             params = [group_id];
-        } else if (user_id) {
-            // 개인 일정 조회
-            query = 'SELECT * FROM schedules WHERE user_id = ?';
-            params = [user_id];
-        } else {
-            return res.status(400).json({ message: 'user_id 또는 group_id가 필요합니다.' });
         }
 
         const [rows] = await db.query(query, params);
