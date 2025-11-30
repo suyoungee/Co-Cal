@@ -15,10 +15,12 @@ const initQuery = `
     CREATE TABLE IF NOT EXISTS schedules (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
+        group_id INT NULL,
         date DATE NOT NULL,
         content TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (group_id) REFERENCES study_groups(id) ON DELETE CASCADE
     );
     
     -- 3. 스터디 그룹 테이블
