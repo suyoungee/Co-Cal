@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
@@ -262,8 +261,7 @@ router.delete('/:groupId/members/:memberId', async (req, res) => {
         
         const leaderId = group[0].created_by;
 
-        // Case A: 스스로 탈퇴 (요청자 == 삭제대상)
-        // Case B: 방장이 추방 (요청자 == 방장)
+        // 권한 체크
         if (parseInt(requesterId) !== parseInt(memberId) && parseInt(requesterId) !== leaderId) {
             return res.status(403).json({ message: '권한이 없습니다.' });
         }
@@ -271,7 +269,25 @@ router.delete('/:groupId/members/:memberId', async (req, res) => {
         if (parseInt(memberId) === leaderId) {
             return res.status(400).json({ message: '방장은 탈퇴할 수 없습니다. 그룹을 삭제해주세요.' });
         }
+        
+        // 1. 시간표 데이터 삭제
+        const deleteTimetableQuery = `
+            DELETE FROM study_timetable 
+            WHERE group_id = ? AND user_id = ?
+        `;
+        await db.query(deleteTimetableQuery, [groupId, memberId]);
 
+        // ============================================================
+        // [수정된 부분] 2. 해당 그룹에 작성한 캘린더 일정(schedules) 삭제
+        // ============================================================
+        const deleteSchedulesQuery = `
+            DELETE FROM schedules 
+            WHERE group_id = ? AND user_id = ?
+        `;
+        await db.query(deleteSchedulesQuery, [groupId, memberId]);
+        // ============================================================
+
+        // 3. 멤버 목록에서 삭제
         await db.query('DELETE FROM group_members WHERE group_id = ? AND user_id = ?', [groupId, memberId]);
 
         const msg = (parseInt(requesterId) === parseInt(memberId)) ? '탈퇴했습니다.' : '멤버를 추방했습니다.';
