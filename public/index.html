@@ -357,7 +357,7 @@
                 document.querySelectorAll('[id^="dots-"]').forEach(el => el.innerHTML = '');
                 
                 try {
-                    const response = await fetch(`/api/schedules?user_id=${targetUserId}`);
+                    const response = await fetch(`/api/schedules?group_id=${currentGroupId}&user_id=${targetUserId}`);
                     const schedules = await response.json();
                     // 내 캘린더는 빨간색으로
                     const isMe = (targetUserId === currentUser.id);
@@ -917,7 +917,7 @@
                     const response = await fetch(url, {
                         method: method,
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user_id: currentUser.id, date, content }),
+                        body: JSON.stringify({ user_id: currentUser.id, group_id: currentGroupId, date, content }),
                     });
                     if (response.ok) { alert('저장되었습니다.'); resetFormToCreateMode(); loadSchedules(); }
                 } catch(e) {}
