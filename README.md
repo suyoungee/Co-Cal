@@ -116,5 +116,5 @@ graph TD
 5.  **접속**
     브라우저에서 `http://localhost:3000` 으로 접속합니다.
     * **테스트 계정(email/password):**
-      - `test@cocal.com` / `1234`
+      - `leader@cocal.com` / `1234`
       - `coworker@cocal.com` / `1234`
