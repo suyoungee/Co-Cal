@@ -329,7 +329,7 @@
                     li.addEventListener('click', () => {
                         // 남의 글이면 수정 불가
                         if(!isMe) {
-                            alert(`${item.user_name}님의 기록입니다.\n내용: ${item.content}`);
+                            alert(`${item.user_name}의 기록입니다.\n내용: ${item.content}`);
                             return;
                         }
                         document.getElementById('log-content').value = item.content;
