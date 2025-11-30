@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
@@ -271,19 +270,24 @@ router.delete('/:groupId/members/:memberId', async (req, res) => {
             return res.status(400).json({ message: '방장은 탈퇴할 수 없습니다. 그룹을 삭제해주세요.' });
         }
         
-        // ============================================================
-        // [수정 완료] 변수명 통일 & 테이블 이름 변경 (study_timetable)
-        // ============================================================
+        // 1. 시간표 데이터 삭제
         const deleteTimetableQuery = `
             DELETE FROM study_timetable 
             WHERE group_id = ? AND user_id = ?
         `;
-
-        // 위에서 만든 deleteTimetableQuery 변수를 정확히 사용
         await db.query(deleteTimetableQuery, [groupId, memberId]);
+
+        // ============================================================
+        // [수정된 부분] 2. 해당 그룹에 작성한 캘린더 일정(schedules) 삭제
+        // ============================================================
+        const deleteSchedulesQuery = `
+            DELETE FROM schedules 
+            WHERE group_id = ? AND user_id = ?
+        `;
+        await db.query(deleteSchedulesQuery, [groupId, memberId]);
         // ============================================================
 
-        // 멤버 목록에서 삭제
+        // 3. 멤버 목록에서 삭제
         await db.query('DELETE FROM group_members WHERE group_id = ? AND user_id = ?', [groupId, memberId]);
 
         const msg = (parseInt(requesterId) === parseInt(memberId)) ? '탈퇴했습니다.' : '멤버를 추방했습니다.';
