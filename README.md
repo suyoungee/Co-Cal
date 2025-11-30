@@ -33,7 +33,7 @@
 ## 4. 전체 시스템 개요도
 
 ### 시스템 아키텍처
-전체 시스템은 **Client(브라우저)**, **Web Server(Node.js)**, **Database(MySQL)**의 3계층 구조로 동작하며, 외부 공휴일 정보를 위해 **External API**와 통신합니다.
+전체 시스템은 **Client(브라우저)**, **Web Server(Node.js)**, **Database(MySQL)** 의 3계층 구조로 동작하며, 외부 공휴일 정보를 위해 **External API**와 통신합니다.
 
 ```mermaid
 graph TD
