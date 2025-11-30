@@ -98,7 +98,7 @@ const seedData = async () => {
         // (5) 샘플 일정 추가
         await db.query(`
             INSERT IGNORE INTO schedules (user_id, date, content) 
-            VALUES (1, CURDATE(), '깃허브 PR 작성하기');
+            VALUES (1, CURDATE(), '테스트유저의 학습기록입니다.');
         `);
 
         console.log('샘플 데이터(Seeding) 로드 완료');
