@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 
-// 1. 그룹 시간표 조회
+// 그룹 시간표 조회
 router.get('/', async (req, res) => {
     let { group_id, user_id } = req.query;
     group_id = Number(group_id);
@@ -23,7 +23,7 @@ router.get('/', async (req, res) => {
             );
             return res.json(rows);
         } else {
-            // 그룹 전체 합산(겹치는 수)
+            // 그룹 전체 합산
             const [rows] = await db.query(
                 `SELECT day_of_week, block, COUNT(*) AS count
                  FROM study_timetable
@@ -39,7 +39,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-// 2. 특정 시간 블록 토글 (내 시간표 수정)
+// 특정 시간 블록 토글 (내 시간표 수정)
 router.post('/', async (req, res) => {
     let { group_id, user_id, day_of_week, block, isOn } = req.body;
 

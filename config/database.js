@@ -1,6 +1,5 @@
-
 const mysql = require('mysql2');
-require('dotenv').config(); // .env 파일 불러오기
+require('dotenv').config();
 
 console.log('--- DB 연결 정보 확인 ---');
 console.log('DB_USER:', process.env.DB_USER);
@@ -17,14 +16,13 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-// 연결 테스트
 pool.getConnection((err, conn) => {
     if (err) {
-        console.error('❌ DB 연결 실패:', err.code);
+        console.error('DB 연결 실패:', err.code);
     } else {
-        console.log('✅ MySQL 데이터베이스 연결 성공!');
+        console.log('MySQL 데이터베이스 연결 성공');
         conn.release();
     }
 });
 
-module.exports = pool.promise(); // 비동기 처리를 위해 promise 모드로 내보내기
+module.exports = pool.promise();

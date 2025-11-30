@@ -7,7 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .calendar-day-placeholder { min-height: 100px; }
-        .select-none { user-select: none; } /* 시간표 드래그 시 텍스트 선택 방지 */
+        .select-none { user-select: none; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -65,7 +66,7 @@
                     <div class="flex items-center space-x-4">
                         <span class="text-sm font-medium text-gray-700">로그인</span>
                         <button id="logout-button" class="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600">로그아웃</button>
-                        <button id="settings-button" class="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">⚙️ 설정</button>
+                        <button id="settings-button" class="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">설정</button>
                     </div>
                 </div>
             </header>
@@ -78,7 +79,7 @@
                             <div class="flex items-center justify-between border-b pb-2">
                                 <h3 class="text-lg font-semibold text-gray-900">스터디 그룹</h3>
                                 <div class="flex gap-1">
-                                    <button id="btn-open-search-modal" class="text-xs font-bold text-gray-500 hover:text-indigo-600 px-2 py-1 rounded hover:bg-gray-100">🔍 검색</button>
+                                    <button id="btn-open-search-modal" class="text-xs font-bold text-gray-500 hover:text-indigo-600 px-2 py-1 rounded hover:bg-gray-100">검색</button>
                                     <button id="btn-toggle-group-form" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 px-2 py-1 rounded hover:bg-indigo-50">+ 만들기</button>
                                 </div>
                             </div>
@@ -116,7 +117,10 @@
                                 <button id="prev-month" class="px-3 py-1 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">&lt; 이전</button>
                                 <div class="text-center">
                                     <h2 id="current-month-year" class="text-xl font-bold cursor-pointer hover:text-indigo-600"></h2>
-                                    <button id="btn-back-to-my" class="hidden text-xs text-white bg-indigo-500 px-2 py-1 rounded mt-1 hover:bg-indigo-600 shadow-sm transition-all">↻ 내 캘린더로 복귀</button>
+                                    <div class="flex justify-center gap-1 mt-1">
+                                        <button id="btn-back-to-my" class="hidden text-xs text-white bg-indigo-500 px-2 py-1 rounded shadow-sm hover:bg-indigo-600">↻ 내 캘린더</button>
+                                        <button id="btn-show-group-all" class="text-xs text-gray-700 bg-gray-200 px-2 py-1 rounded shadow-sm hover:bg-gray-300">그룹 기록 보기</button>
+                                    </div>
                                 </div>
                                 <button id="next-month" class="px-3 py-1 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">다음 &gt;</button>
                             </div>
@@ -232,10 +236,8 @@
     </div>
 
     <script>
-        // --- 1. 전역 변수 ---
         let currentUser = null; 
         
-        // 시간표용 상수
         const DAYS = [
             { label: '일', value: 0 }, { label: '월', value: 1 }, { label: '화', value: 2 },
             { label: '수', value: 3 }, { label: '목', value: 4 }, { label: '금', value: 5 }, { label: '토', value: 6 }
@@ -245,7 +247,6 @@
         });
 
         document.addEventListener('DOMContentLoaded', () => {
-            // --- 상태 변수 ---
             let selectedScheduleId = null; 
             let dailySchedules = {};       
             let currentGroupId = null;
@@ -255,7 +256,7 @@
 
             document.addEventListener("mouseup", () => { isDragging = false; });
             
-            // --- DOM 요소 가져오기 ---
+            // --- DOM 요소 ---
             const loginPage = document.getElementById('login-page');
             const signupPage = document.getElementById('signup-page');
             const mainPage = document.getElementById('main-page');
@@ -272,7 +273,8 @@
             const saveLogBtn = document.getElementById('save-log');
             const deleteLogBtn = document.getElementById('delete-log');
             const newEntryBtn = document.getElementById('btn-new-entry');
-            const backBtn = document.getElementById('btn-back-to-my');
+            const backBtn = document.getElementById('btn-back-to-my'); 
+            const btnShowGroupAll = document.getElementById('btn-show-group-all'); 
             const scheduleListContainer = document.getElementById('schedule-list-container');
             const scheduleListUl = document.getElementById('schedule-list');
 
@@ -307,9 +309,7 @@
             const closeSettingsBtn = document.getElementById('close-settings');
 
 
-            // --- [함수 정의] ---
-
-            // 리스트 그리기 함수 (UI 갱신용)
+            // 리스트 그리기
             const renderScheduleList = (dateString) => {
                 const items = dailySchedules[dateString] || [];
                 if (items.length === 0) {
@@ -322,8 +322,16 @@
                 items.forEach(item => {
                     const li = document.createElement('li');
                     li.className = 'p-2 bg-white border border-gray-200 rounded hover:bg-indigo-50 cursor-pointer text-sm truncate';
-                    li.innerText = item.content; 
+                    // 이름 표시
+                    const isMe = (item.user_id === currentUser.id);
+                    li.innerText = isMe ? item.content : `[${item.user_name}] ${item.content}`; 
+                    
                     li.addEventListener('click', () => {
+                        // 남의 글이면 수정 불가
+                        if(!isMe) {
+                            alert(`${item.user_name}님의 기록입니다.\n내용: ${item.content}`);
+                            return;
+                        }
                         document.getElementById('log-content').value = item.content;
                         selectedScheduleId = item.id;
                         saveLogBtn.innerText = '수정';
@@ -342,7 +350,7 @@
                 newEntryBtn.classList.add('hidden');
             };
 
-            // [일정] 불러오기
+            // [일정] 불러오기 (개인 - 기본)
             const loadSchedules = async (targetUserId = currentUser.id, targetUserName = '나') => {
                 if (!targetUserId) return;
                 dailySchedules = {}; 
@@ -351,8 +359,9 @@
                 try {
                     const response = await fetch(`/api/schedules?user_id=${targetUserId}`);
                     const schedules = await response.json();
+                    // 내 캘린더는 빨간색으로
                     const isMe = (targetUserId === currentUser.id);
-                    const dotColorClass = isMe ? 'bg-red-500' : 'bg-blue-500';
+                    const dotColorClass = 'bg-red-500'; 
 
                     schedules.forEach(schedule => {
                         if (!dailySchedules[schedule.date]) dailySchedules[schedule.date] = [];
@@ -365,31 +374,70 @@
                         }
                     });
 
-                    // 날짜 선택 상태 유지 및 리스트 갱신
-                    const currentDateVal = document.getElementById('log-date').value;
-                    if(currentDateVal && isMe) {
-                        renderScheduleList(currentDateVal);
-                    }
+                    updateCalendarUI(true, targetUserName); // isMe = true (내 기록 보기 모드)
 
-                    const textArea = document.getElementById('log-content');
-                    if (!isMe) {
-                        textArea.placeholder = `${targetUserName}님의 공부 기록입니다. (보기 전용)`;
-                        textArea.disabled = true;
-                        saveLogBtn.classList.add('hidden');
-                        deleteLogBtn.classList.add('hidden');
-                        newEntryBtn.classList.add('hidden');
-                        backBtn.classList.remove('hidden');
-                        scheduleListContainer.classList.add('hidden'); 
-                    } else {
-                        textArea.placeholder = "오늘 공부한 내용을 기록하세요...";
-                        textArea.disabled = false;
-                        saveLogBtn.classList.remove('hidden');
-                        backBtn.classList.add('hidden');
-                    }
                 } catch (error) { console.error('일정 로드 실패:', error); }
             };
 
-            // [그룹] 목록 로드 (자동선택 포함)
+            // [일정] 그룹 전체 불러오기 (그룹 모드)
+            const loadGroupSchedules = async () => {
+                if (!currentGroupId) return alert('선택된 그룹이 없습니다.');
+                dailySchedules = {}; 
+                document.querySelectorAll('[id^="dots-"]').forEach(el => el.innerHTML = '');
+
+                try {
+                    const response = await fetch(`/api/schedules?group_id=${currentGroupId}`);
+                    const schedules = await response.json();
+
+                    schedules.forEach(schedule => {
+                        if (!dailySchedules[schedule.date]) dailySchedules[schedule.date] = [];
+                        schedule.user_name = schedule.user_name || '이름없음';
+                        dailySchedules[schedule.date].push(schedule);
+
+                        const dotContainer = document.getElementById(`dots-${schedule.date}`);
+                        if (dotContainer) {
+                            const dot = document.createElement('div');
+                            // 색상: 나=빨강, 남=파랑
+                            const isMe = (schedule.user_id === currentUser.id);
+                            const colorClass = isMe ? 'bg-red-500' : 'bg-blue-500';
+                            
+                            dot.className = `w-2 h-2 ${colorClass} rounded-full`;
+                            dot.title = isMe ? "나" : schedule.user_name;
+                            dotContainer.appendChild(dot);
+                        }
+                    });
+
+                    updateCalendarUI(false, '그룹 전체'); // isMe = false (그룹 보기 모드)
+                    alert('그룹 전체 멤버의 학습 기록을 불러왔습니다.\n');
+
+                } catch (error) { console.error('그룹 일정 로드 실패:', error); }
+            };
+
+            const updateCalendarUI = (isMyMode, targetName) => {
+                const currentDateVal = document.getElementById('log-date').value;
+                if(currentDateVal) renderScheduleList(currentDateVal);
+
+                const textArea = document.getElementById('log-content');
+                
+                if (isMyMode) {
+                    textArea.placeholder = "오늘 공부한 내용을 기록하세요.";
+                    textArea.disabled = false;
+                    saveLogBtn.classList.remove('hidden');
+                    backBtn.classList.add('hidden');
+                    btnShowGroupAll.classList.remove('hidden');
+                } else {
+                    // [그룹 모드]
+                    textArea.placeholder = `${targetName}님의 기록입니다. (보기 전용)`;
+                    textArea.disabled = true;
+                    saveLogBtn.classList.add('hidden');
+                    deleteLogBtn.classList.add('hidden');
+                    newEntryBtn.classList.add('hidden');
+                    backBtn.classList.remove('hidden');
+                    btnShowGroupAll.classList.add('hidden');
+                }
+            };
+
+            // [그룹] 로드 및 선택
             const loadGroups = async () => {
                 if (!currentUser) return;
                 try {
@@ -403,33 +451,47 @@
                         return;
                     }
 
+                    // 초기 자동 선택
                     if (!currentGroupId && groups.length > 0) {
                         currentGroupId = groups[0].id;
                         loadMyTimetable();
                         loadGroupTimetable();
+                        loadSchedules(currentUser.id, '나');
                     }
 
                     groups.forEach(group => {
                         const li = document.createElement('li');
-                        li.className = 'p-2 border border-gray-100 rounded hover:bg-indigo-50 cursor-pointer transition flex justify-between items-center';
+                        li.className = 'p-2 border border-gray-100 rounded hover:bg-indigo-50 transition flex justify-between items-center group';
                         if(group.id === currentGroupId) li.classList.add('bg-indigo-50', 'border-indigo-200');
 
-                        li.innerHTML = `
-                            <div>
-                                <div class="font-medium text-indigo-600 flex items-center gap-1">
-                                    ${group.name}
-                                    ${group.created_by === currentUser.id ? '<span class="text-[10px] bg-yellow-100 text-yellow-700 px-1 rounded">👑</span>' : ''}
-                                </div>
-                                <div class="text-xs text-gray-500 truncate">${group.description || '설명 없음'}</div>
+                        // 그룹 정보
+                        const infoDiv = document.createElement('div');
+                        infoDiv.className = 'cursor-pointer flex-1';
+                        infoDiv.innerHTML = `
+                            <div class="font-medium text-indigo-600 flex items-center gap-1">
+                                ${group.name}
+                                ${group.created_by === currentUser.id ? '<span class="text-[10px] bg-yellow-100 text-yellow-700 px-1 rounded">👑</span>' : ''}
                             </div>
+                            <div class="text-xs text-gray-500 truncate">${group.description || '설명 없음'}</div>
                         `;
-                        li.addEventListener('click', () => {
+                        infoDiv.addEventListener('click', () => {
                             currentGroupId = group.id; 
-                            loadGroups(); 
+                            loadGroups();
                             loadMyTimetable(); 
                             loadGroupTimetable();
+                            loadSchedules(currentUser.id, '나');
+                        });
+
+                        // 설정 버튼
+                        const settingBtn = document.createElement('button');
+                        settingBtn.className = 'text-gray-400 hover:text-gray-700 p-1 rounded hover:bg-gray-200';
+                        settingBtn.innerHTML = '⚙️';
+                        settingBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
                             openGroupModal(group.id, group.name, group.created_by);
                         });
+                        li.appendChild(infoDiv);
+                        li.appendChild(settingBtn);
                         groupListEl.appendChild(li);
                     });
                 } catch (error) { console.error('그룹 로드 실패:', error); }
@@ -470,9 +532,9 @@
                         td.dataset.block = block.value;
 
                         td.addEventListener('mousedown', async (e) => {
-                            if (!currentUser) return;
-                            if (!currentGroupId) return; 
-                            if (timetableMode !== 'my') return;
+                            if (!currentUser) return alert('로그인 필요');
+                            if (!currentGroupId) return alert('그룹을 먼저 선택해주세요.'); 
+                            if (timetableMode !== 'my') return alert('내 시간표 편집 모드에서만 가능합니다.');
 
                             isDragging = true;
                             const alreadyOn = td.classList.contains('bg-blue-100');
@@ -542,8 +604,6 @@
             const openGroupModal = async (groupId, groupName, createdBy) => {
                 modalGroupName.innerText = groupName;
                 groupModal.classList.remove('hidden');
-
-                // 방장 정보 넘겨서 멤버 로드 (추방/탈퇴 버튼용)
                 loadGroupMembers(groupId, createdBy);
 
                 if (currentUser.id === createdBy) {
@@ -556,7 +616,7 @@
                 }
             };
 
-            // [그룹] 멤버 목록 로드 (탈퇴/추방/나 표시 복구)
+            // [그룹] 멤버 목록 로드
             const loadGroupMembers = async (groupId, groupCreatorId) => {
                 try {
                     const response = await fetch(`/api/groups/${groupId}/members`);
@@ -565,28 +625,13 @@
                     
                     members.forEach(member => {
                         const li = document.createElement('li');
-                        li.className = 'flex justify-between items-center text-sm p-2 border-b border-gray-100 cursor-pointer hover:bg-gray-100 transition';
+                        li.className = 'flex justify-between items-center text-sm p-2 border-b border-gray-100 hover:bg-gray-100 transition'; // cursor-pointer 제거
+                        let isMe = '';
+                        if (currentUser && currentUser.id === member.id) isMe = '<span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-1 rounded ml-2">나</span>';
+                        if (member.id === groupCreatorId) isMe += '<span class="text-[10px] ml-1">👑</span>';
                         
-                        // 1. 왼쪽: 이름 및 정보
-                        const leftDiv = document.createElement('div');
-                        leftDiv.className = 'flex items-center';
-                        let nameHTML = `<span class="font-medium text-gray-800">${member.name}</span> <span class="text-xs text-gray-400 ml-1">(${member.email})</span>`;
-                        
-                        if (currentUser.id === member.id) nameHTML += `<span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1 rounded ml-1">나</span>`;
-                        if (member.id === groupCreatorId) nameHTML += `<span class="text-[10px] ml-1">👑</span>`;
-                        leftDiv.innerHTML = nameHTML;
-
-                        leftDiv.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            loadSchedules(member.id, member.name); 
-                            groupModal.classList.add('hidden');
-                            alert(`${member.name}님의 캘린더로 전환되었습니다.`);
-                        });
-
-                        // 2. 오른쪽: 관리 버튼 (탈퇴/추방)
+                        li.innerHTML = `<div class="flex items-center"><span class="font-medium text-gray-800">${member.name}</span><span class="text-xs text-gray-400 ml-2">(${member.email})</span>${isMe}</div>`;
                         const btnDiv = document.createElement('div');
-                        
-                        // A. 방장이 멤버 추방
                         if (currentUser.id === groupCreatorId && member.id !== groupCreatorId) {
                             const kickBtn = document.createElement('button');
                             kickBtn.className = 'text-[10px] bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200 ml-2';
@@ -594,7 +639,6 @@
                             kickBtn.onclick = (e) => { e.stopPropagation(); removeMember(groupId, member.id, 'kick'); };
                             btnDiv.appendChild(kickBtn);
                         }
-                        // B. 본인 탈퇴
                         if (currentUser.id === member.id && currentUser.id !== groupCreatorId) {
                             const leaveBtn = document.createElement('button');
                             leaveBtn.className = 'text-[10px] bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300 ml-2';
@@ -602,15 +646,12 @@
                             leaveBtn.onclick = (e) => { e.stopPropagation(); removeMember(groupId, member.id, 'leave'); };
                             btnDiv.appendChild(leaveBtn);
                         }
-
-                        li.appendChild(leftDiv);
                         li.appendChild(btnDiv);
                         modalMemberList.appendChild(li); 
                     });
                 } catch (error) { console.error('멤버 로드 실패:', error); }
             };
 
-            // 멤버 탈퇴/추방 처리 함수
             const removeMember = async (groupId, targetMemberId, type) => {
                 const confirmMsg = type === 'leave' ? '정말 그룹을 탈퇴하시겠습니까?' : '정말 이 멤버를 추방하시겠습니까?';
                 if (!confirm(confirmMsg)) return;
@@ -624,16 +665,10 @@
                     const data = await response.json();
                     if (response.ok) {
                         alert(data.message);
-                        if (type === 'leave') {
-                            groupModal.classList.add('hidden');
-                            loadGroups();
-                            loadSchedules(currentUser.id, '나');
-                        } else {
-                            // 추방은 목록만 갱신 (방장 ID 필요하므로 UI 리로드 대신 currentUser 사용)
-                            loadGroupMembers(groupId, currentUser.id); 
-                        }
+                        if (type === 'leave') { groupModal.classList.add('hidden'); loadGroups(); loadSchedules(currentUser.id, '나'); }
+                        else { loadGroupMembers(groupId, currentUser.id); }
                     } else { alert('실패: ' + data.message); }
-                } catch (error) { console.error(error); alert('오류 발생'); }
+                } catch (error) { console.error(error); }
             };
 
             // [그룹] 신청/승인
@@ -760,11 +795,17 @@
                 window.location.reload();
             });
 
+            // 캘린더 관련 버튼
             document.getElementById('current-month-year').addEventListener('click', () => {
                 if(currentUser) { loadSchedules(currentUser.id, '나'); alert('나의 캘린더로 돌아왔습니다.'); }
             });
             backBtn.addEventListener('click', () => {
                 if(currentUser) { loadSchedules(currentUser.id, '나'); alert('나의 캘린더로 돌아왔습니다.'); }
+            });
+            
+            // 그룹 전체 보기 버튼
+            btnShowGroupAll.addEventListener('click', () => {
+                loadGroupSchedules();
             });
 
             btnToggleGroup.addEventListener('click', () => { groupFormContainer.classList.remove('hidden'); document.getElementById('new-group-name').focus(); });
@@ -907,8 +948,8 @@
                     const dateDiv = document.createElement('div');
                     const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
                     dateDiv.dataset.date = dateString;
-                    dateDiv.className = 'p-2 border border-gray-200 rounded-md bg-white hover:bg-indigo-50 cursor-pointer h-24 transition flex flex-col justify-between';
-                    dateDiv.innerHTML = `<span class="font-semibold text-gray-700">${i}</span><div id="dots-${dateString}" class="flex gap-1 justify-center text-xs text-red-500"></div>`;
+                    dateDiv.className = 'p-2 border border-gray-200 rounded-md bg-white hover:bg-indigo-50 cursor-pointer h-24 transition flex flex-col justify-between overflow-y-auto scrollbar-hide';
+                    dateDiv.innerHTML = `<span class="font-semibold text-gray-700">${i}</span><div id="dots-${dateString}" class="flex flex-wrap content-start gap-1 w-full mt-1"></div>`; // dots 컨테이너 수정
                     dateDiv.addEventListener('click', () => {
                         document.getElementById('log-date').value = dateString;
                         resetFormToCreateMode();
@@ -923,7 +964,7 @@
                             const d = document.querySelector(`div[data-date="${h.date}"]`);
                             if(d) {
                                 d.querySelector('span').classList.add('text-red-500');
-                                if(!d.querySelector('.holiday-name')) d.innerHTML += `<div class="holiday-name text-xs text-red-500 mt-1 truncate font-bold">${h.name}</div>`;
+                                if(!d.querySelector('.holiday-name')) d.querySelector('span').insertAdjacentHTML('afterend', `<div class="holiday-name text-[10px] text-red-500 truncate font-bold">${h.name}</div>`);
                             }
                         });
                     }
