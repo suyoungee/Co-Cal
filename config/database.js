@@ -16,6 +16,7 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+// 데이터베이스 연결 테스트
 pool.getConnection((err, conn) => {
     if (err) {
         console.error('DB 연결 실패:', err.code);
