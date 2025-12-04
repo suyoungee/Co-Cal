@@ -25,6 +25,7 @@
 | **Backend** | **Node.js, Express.js** | RESTful API 서버 구축 |
 | **Database** | **MySQL** | 관계형 데이터베이스 (RDBMS) |
 | **API** | **Calendarific API** | 공휴일 정보 자동 연동 |
+| **Deployment** | **Railway** (Database) | 클라우드 MySQL 호스팅 |
 | **Library** | `mysql2`, `dotenv`, `node-fetch` | DB 연결 및 환경변수 관리 |
 | **Collaboration** | **GitHub** | 버전 관리 및 협업 |
 
@@ -113,8 +114,8 @@ graph TD
     ```
     * *서버 실행 시 `init-db.js`가 동작하여 필요한 DB 테이블과 초기 샘플 데이터가 자동으로 생성됩니다.*
 
-5.  **접속**
+5.  **접속 및 테스트**
     브라우저에서 `http://localhost:3000` 으로 접속합니다.
     * **테스트 계정(email/password):**
-      - `test@cocal.com` / `1234`
+      - `leader@cocal.com` / `1234`
       - `coworker@cocal.com` / `1234`

@@ -1,10 +1,10 @@
-
 const express = require('express');
 const app = express();
 const path = require('path');
 const db = require('./config/database');
 const initDB = require('./config/init-db');
 initDB();
+
 const authRoutes = require('./routes/auth');
 const scheduleRoutes = require('./routes/schedule');
 const holidayRoutes = require('./routes/holiday');
@@ -15,14 +15,12 @@ const userRouter = require('./routes/user');
 
 const PORT = 3000;
 
-
+// --- 미들웨어 설정 ---
 app.use(express.static(path.join(__dirname, 'public')));
-
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
+// --- 라우트 등록 ---
 app.use('/api/auth', authRoutes);
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/holidays', holidayRoutes);
@@ -30,7 +28,7 @@ app.use('/api/groups', groupRoutes);
 app.use('/api/timetable', timetableRoutes);
 app.use('/api/user', userRouter);
 
-
+// --- 메인 페이지 ---
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
@@ -7,13 +6,11 @@ const db = require('../config/database');
 router.post('/', async (req, res) => {
     const { user_id, date, content, group_id } = req.body;
 
-    // 데이터 검증
     if (!user_id || !group_id || !date || !content ) {
         return res.status(400).json({ message: '날짜와 내용을 모두 입력해주세요.' });
     }
 
     try {
-        // DB에 저장
         const query = 'INSERT INTO schedules (user_id, group_id, date, content) VALUES (?, ?, ?, ?)';
         await db.query(query, [user_id, group_id, date, content]);
 
@@ -29,7 +26,6 @@ router.post('/', async (req, res) => {
 router.get('/', async (req, res) => {
     const { user_id, group_id } = req.query;
 
-    // group_id는 모든 조회에서 필수
     if (!group_id) {
         return res.status(400).json({ message: 'group_id는 필수입니다.' });
     }
@@ -38,7 +34,6 @@ router.get('/', async (req, res) => {
         let query = '';
         let params = [];
 
-        // 1) 내 캘린더: user_id + group_id 둘 다 있을 때
         if (user_id) {
             query = `
                 SELECT s.id, s.user_id, s.group_id, s.date, s.content, u.name as user_name
@@ -49,7 +44,6 @@ router.get('/', async (req, res) => {
             `;
             params = [group_id, user_id];
 
-        // 2) 그룹 캘린더: group_id만 있을 때 (전체 일정)
         } else {
             query = `
                 SELECT s.id, s.user_id, s.group_id, s.date, s.content, u.name as user_name
@@ -63,10 +57,8 @@ router.get('/', async (req, res) => {
 
         const [rows] = await db.query(query, params);
 
-        // 날짜 포맷 변환 (YYYY-MM-DD)
         const schedules = rows.map(row => {
             const d = new Date(row.date);
-            // UTC 변환 없이, 현재 시스템(한국) 시간 기준으로 연/월/일 추출
             const year = d.getFullYear();
             const month = String(d.getMonth() + 1).padStart(2, '0');
             const day = String(d.getDate()).padStart(2, '0');
