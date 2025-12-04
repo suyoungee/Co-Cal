@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 
-// 그룹 시간표 조회
+// 시간표 조회/수정 API
 router.get('/', async (req, res) => {
     let { group_id, user_id } = req.query;
     group_id = Number(group_id);
@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
 
     try {
         if (user_id) {
-            // 내 시간표만 조회
+            // 개별 사용자의 시간표 조회
             const [rows] = await db.query(
                 `SELECT day_of_week, block
                  FROM study_timetable
@@ -23,7 +23,7 @@ router.get('/', async (req, res) => {
             );
             return res.json(rows);
         } else {
-            // 그룹 전체 합산
+            // 그룹 전체 시간표 합산 (겹치는 시간 확인용)
             const [rows] = await db.query(
                 `SELECT day_of_week, block, COUNT(*) AS count
                  FROM study_timetable
@@ -39,7 +39,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-// 특정 시간 블록 토글 (내 시간표 수정)
 router.post('/', async (req, res) => {
     let { group_id, user_id, day_of_week, block, isOn } = req.body;
 
@@ -54,6 +53,7 @@ router.post('/', async (req, res) => {
 
     try {
         if (isOn) {
+            // 시간표 추가
             await db.query(
                 `INSERT IGNORE INTO study_timetable 
                  (group_id, user_id, day_of_week, block)
@@ -61,6 +61,7 @@ router.post('/', async (req, res) => {
                 [group_id, user_id, day_of_week, block]
             );
         } else {
+            // 시간표 삭제
             await db.query(
                 `DELETE FROM study_timetable 
                  WHERE group_id = ? AND user_id = ? 

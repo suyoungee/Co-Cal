@@ -1,6 +1,6 @@
-
 const db = require('./database');
 
+// 테이블 생성 쿼리
 const initQuery = `
     -- 1. 유저 테이블
     CREATE TABLE IF NOT EXISTS users (
@@ -69,28 +69,24 @@ const initQuery = `
     );
 `;
 
-
+// 초기 샘플 데이터 삽입 
 const seedData = async () => {
     try {
-        // 방장 계정 생성
         await db.query(`
             INSERT IGNORE INTO users (id, email, password, name) 
             VALUES (1, 'leader@cocal.com', '1234', '방장');
         `);
 
-        // 팀원 계정 생성
         await db.query(`
             INSERT IGNORE INTO users (id, email, password, name) 
             VALUES (2, 'coworker@cocal.com', '1234', '팀원');
         `);
 
-        // 샘플 스터디 그룹 생성
         await db.query(`
             INSERT IGNORE INTO study_groups (id, name, description, created_by) 
             VALUES (1, '웹응용프로그래밍 스터디', '기말고사 대비 스터디', 1), (2, '겨울방학 웹개발 프로젝트', '겨울방학 때 프로젝트 하나 진행하실 분', 1);
         `);
 
-        // 그룹 멤버 연결 (방장을 그룹 1, 2에 가입)
         await db.query(`
             INSERT IGNORE INTO group_members (group_id, user_id) 
             VALUES (1, 1), (2, 1);
@@ -103,6 +99,7 @@ const seedData = async () => {
     }
 };
 
+// DB 초기화: 테이블 생성 후 샘플 데이터 삽입
 const initDB = async () => {
     try {
         const queries = initQuery.split(';').filter(q => q.trim());

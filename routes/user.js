@@ -11,7 +11,6 @@ router.put('/password', async (req, res) => {
     }
 
     try {
-        // 사용자 확인 및 기존 비밀번호 검증
         const [users] = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
         if (users.length === 0) {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
@@ -22,7 +21,6 @@ router.put('/password', async (req, res) => {
             return res.status(401).json({ message: '현재 비밀번호가 일치하지 않습니다.' });
         }
 
-        // 비밀번호 업데이트
         await db.query('UPDATE users SET password = ? WHERE id = ?', [newPassword, userId]);
 
         res.json({ message: '비밀번호가 성공적으로 변경되었습니다.' });
@@ -42,7 +40,6 @@ router.delete('/account', async (req, res) => {
     }
 
     try {
-        // 1. 사용자 확인
         const [users] = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
         if (users.length === 0) {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
@@ -50,34 +47,23 @@ router.delete('/account', async (req, res) => {
 
         const user = users[0];
         
-        // 2. 비밀번호 검증
         if (user.password !== password) {
             return res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
         }
 
-        // ============================================================
-        // [수정된 부분] 연관된 모든 데이터를 순서대로 삭제 (에러 방지)
-        // ============================================================
+        // 연관 데이터 삭제 순서 중요 
         
-        // 1) [요청하신 부분] 그룹 시간표에서 내 데이터 삭제
+        // 1. 하위 데이터 삭제 (시간표, 일정, 요청)
+        
         await db.query('DELETE FROM study_timetable WHERE user_id = ?', [userId]);
-
-        // 2) 내 개인 캘린더 일정 삭제
         await db.query('DELETE FROM schedules WHERE user_id = ?', [userId]);
-
-        // 3) 가입 신청 내역 삭제
         await db.query('DELETE FROM group_join_requests WHERE user_id = ?', [userId]);
-
-        // 4) 그룹 멤버 목록에서 삭제
         await db.query('DELETE FROM group_members WHERE user_id = ?', [userId]);
 
-        // 5) [중요] 내가 방장으로 있는 스터디 그룹 자체를 삭제
-        // (방장이 사라지면 그룹을 관리할 사람이 없으므로 그룹도 삭제하는 것이 일반적입니다)
+        // 2. 내가 방장인 그룹 삭제
         await db.query('DELETE FROM study_groups WHERE created_by = ?', [userId]);
-
-        // ============================================================
-
-        // 6. 마지막으로 사용자 계정 삭제
+        
+        // 3. 사용자 삭제
         await db.query('DELETE FROM users WHERE id = ?', [userId]);
 
         res.json({ message: '계정과 모든 데이터가 삭제되었습니다.' });
