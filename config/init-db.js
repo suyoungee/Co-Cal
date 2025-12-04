@@ -11,7 +11,17 @@ const initQuery = `
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
-    -- 2. 일정 테이블
+    -- 2. 스터디 그룹 테이블
+    CREATE TABLE IF NOT EXISTS study_groups (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        description TEXT,
+        created_by INT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (created_by) REFERENCES users(id)
+    );
+
+    -- 3. 일정 테이블
     CREATE TABLE IF NOT EXISTS schedules (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
@@ -23,16 +33,6 @@ const initQuery = `
         FOREIGN KEY (group_id) REFERENCES study_groups(id) ON DELETE CASCADE
     );
     
-    -- 3. 스터디 그룹 테이블
-    CREATE TABLE IF NOT EXISTS study_groups (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        description TEXT,
-        created_by INT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (created_by) REFERENCES users(id)
-    );
-
     -- 4. 스터디 멤버 테이블
     CREATE TABLE IF NOT EXISTS group_members (
         id INT AUTO_INCREMENT PRIMARY KEY,
