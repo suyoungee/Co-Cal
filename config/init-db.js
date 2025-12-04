@@ -92,7 +92,7 @@ const seedData = async () => {
             VALUES (1, 1), (2, 1);
         `);
 
-        console.log('샘플 데이터(Seeding) 로드 완료');
+        console.log('샘플 데이터 로드 완료');
 
     } catch (error) {
         console.error('샘플 데이터 로드 실패:', error);
